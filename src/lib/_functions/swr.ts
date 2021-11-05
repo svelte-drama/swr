@@ -66,7 +66,7 @@ const emptyKeyMock = {
   update: async () => undefined,
 }
 
-type Result<T> = T | Promise<T | undefined> | undefined
+type Result<T> = T | Promise<T | undefined> | undefined | void
 type Fetcher<T> = (key: string) => Result<T>
 type UpdaterFn<T> = (key: string, data: T) => Result<T>
 
@@ -76,11 +76,12 @@ export type SWROptions<T> = {
   plugins?: SWRPlugin[]
   updater?: UpdaterFn<T>
 }
+
+export function swr<T>(key?: string, options?: SWROptions<T>): SWRResult<T>
 export function swr<T>(
   key: string | undefined,
   fetcher: Fetcher<T>
 ): SWRResult<T>
-export function swr<T>(key?: string, options?: SWROptions<T>): SWRResult<T>
 export function swr<T>(
   key: string | undefined,
   options: Fetcher<T> | SWROptions<T> = {}
