@@ -16,6 +16,7 @@ const options = {
   fetcher: (key) => fetch(key).then((r) => r.json()),
   maxAge: undefined,
   plugins: [],
+  updater: undefined
 }
 const { data, error, refresh, update } = swr(key, options) // or "swr(key, options.fetcher)"
 ```
