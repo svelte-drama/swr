@@ -19,6 +19,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "strictNullChecks": true,
     "baseUrl": ".",
     "allowJs": true,
     "checkJs": true,
