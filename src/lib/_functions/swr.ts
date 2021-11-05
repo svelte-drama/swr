@@ -53,8 +53,8 @@ function makeWritable<T>({
   } as Writable<T>
 }
 
-type SWRResult<T> = {
-  data: Readable<T | undefined>
+export type SWRResult<T> = {
+  data: Readable<T | undefined> | Writable<T | undefined>
   error: Readable<Error | undefined>
   refresh: () => Promise<void>
   update: (fn: Updater<T>) => Promise<T | undefined>
@@ -66,7 +66,7 @@ const emptyKeyMock = {
   update: async () => undefined,
 }
 
-type Result<T> = T | Promise<T | undefined> | undefined | void
+type Result<T> = T | Promise<T | void> | void
 type Fetcher<T> = (key: string) => Result<T>
 type UpdaterFn<T> = (key: string, data: T) => Result<T>
 
