@@ -16,7 +16,7 @@ const options = {
   fetcher: (key) => fetch(key).then((r) => r.json()),
   maxAge: undefined,
   plugins: [],
-  updater: undefined
+  updater: undefined,
 }
 const { data, error, refresh, update } = swr(key, options) // or "swr(key, options.fetcher)"
 ```
@@ -82,7 +82,8 @@ Delete a specific key from cache.
 ```js
 import { update } from '@svelte-drama/swr'
 
-update(key, (value) => {
+update(key, new_value)
+update(key, async (value) => {
   return new_value
 })
 ```

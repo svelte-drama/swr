@@ -1,17 +1,17 @@
 import { derived, readable } from 'svelte/store'
 import { getOrCreate } from '../_cache'
 import { update as updateCache } from './update'
-import type { Updater } from './update'
+import type { MaybePromise, Updater } from './update'
 import type { Readable, Writable } from 'svelte/store'
 import type { SWRPlugin } from '../plugin'
 
-function createRefresh<T>(key: string, fetcher: Fetcher<T>) {
+function createRefresh<T>(key: string, fetcher: FetcherFn<T>) {
   return async function (force = false) {
-    return updateCache(key, () => fetcher(key), force)
+    return updateCache<T>(key, () => fetcher(key), force)
   }
 }
 
-function makeReadable<T>(store: Writable<T>, onSubscribe: Readable<unknown>) {
+function makeReadable<T>(store: Readable<T>, onSubscribe: Readable<unknown>) {
   return derived([store, onSubscribe], ([$store]) => $store)
 }
 
@@ -53,11 +53,11 @@ function makeWritable<T>({
   } as Writable<T>
 }
 
-export type SWRResult<T> = {
-  data: Readable<T | undefined> | Writable<T | undefined>
+export type SWRResult<T, Result = Readable<T | undefined>> = {
+  data: Result
   error: Readable<Error | undefined>
   refresh: () => Promise<void>
-  update: (fn: Updater<T>) => Promise<T | undefined>
+  update: (fn: Updater<T>) => Promise<T | void>
 }
 const emptyKeyMock = {
   data: readable(undefined),
@@ -66,25 +66,33 @@ const emptyKeyMock = {
   update: async () => undefined,
 }
 
-type Result<T> = T | Promise<T | void> | void
-type Fetcher<T> = (key: string) => Result<T>
-type UpdaterFn<T> = (key: string, data: T) => Result<T>
+type FetcherFn<T> = (key: string) => MaybePromise<T | void>
+type UpdaterFn<T> = (key: string, data: T) => MaybePromise<T | void>
 
 export type SWROptions<T> = {
-  fetcher?: Fetcher<T>
+  fetcher?: FetcherFn<T>
   maxAge?: number
   plugins?: SWRPlugin[]
   updater?: UpdaterFn<T>
 }
+type SWROptionsWithUpdater<T> = SWROptions<T> & Pick<SWROptions<T>, 'updater'>
 
-export function swr<T>(key?: string, options?: SWROptions<T>): SWRResult<T>
+export function swr<T>(key: string | undefined): SWRResult<T>
 export function swr<T>(
   key: string | undefined,
-  fetcher: Fetcher<T>
+  options: SWROptionsWithUpdater<T>
+): SWRResult<T, Writable<T | undefined>>
+export function swr<T>(
+  key: string | undefined,
+  options: SWROptions<T>
 ): SWRResult<T>
 export function swr<T>(
   key: string | undefined,
-  options: Fetcher<T> | SWROptions<T> = {}
+  fetcher: FetcherFn<T>
+): SWRResult<T>
+export function swr<T>(
+  key: string | undefined,
+  options: FetcherFn<T> | SWROptions<T> = {}
 ): SWRResult<T> {
   if (!key) {
     return emptyKeyMock

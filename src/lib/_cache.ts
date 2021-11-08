@@ -5,7 +5,7 @@ export type CacheObject<T> = {
   data: Writable<T | undefined>
   error: Writable<Error | undefined>
   last_update: number
-  request: Promise<T | undefined> | undefined
+  request: Promise<T | void> | undefined
 }
 export const cache = new Map<string, CacheObject<unknown>>()
 

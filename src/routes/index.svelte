@@ -20,7 +20,6 @@ const { data } = swr<Profile>('/api/profile', {
     const raw = localStorage.getItem(key)
 
     const result = raw ? JSON.parse(raw) : { ...new_profile }
-    console.log(result)
     return result
   },
   updater(key, value) {
