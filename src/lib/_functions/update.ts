@@ -22,13 +22,22 @@ export async function update<T>(
 
   if (!force && store.request) return store.request
 
-  const request = isFunction(data) ? data(get(store.data)) : data
-  store.request = Promise.resolve(request)
+  let request: Promise<T | void>
+  if (isFunction(data)) {
+    const current_value = get(store.data)
+    request = Promise.resolve(data(current_value))
+  } else {
+    request = Promise.resolve(data)
+  }
+
+  store.request = request
 
   try {
     const result = await request
-    if (result !== undefined && store.request === request) {
-      store.data.set(result)
+    if (store.request === request) {
+      if (result !== undefined) {
+        store.data.set(result)
+      }
       store.error.set(undefined)
       store.last_update = Date.now()
       store.request = undefined
