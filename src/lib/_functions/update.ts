@@ -37,9 +37,9 @@ export async function update<T>(
     if (store.request === request) {
       if (result !== undefined) {
         store.data.set(result)
+        store.error.set(undefined)
+        store.last_update = Date.now()
       }
-      store.error.set(undefined)
-      store.last_update = Date.now()
       store.request = undefined
     }
     return result
