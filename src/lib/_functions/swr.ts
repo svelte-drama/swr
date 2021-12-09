@@ -55,6 +55,7 @@ function makeWritable<T>({
 
 export type SWRResult<T, Result = Readable<T | undefined>> = {
   data: Result
+  processing: Readable<boolean>
   error: Readable<Error | undefined>
   refresh: () => Promise<void>
   update: (fn: Updater<T>) => Promise<T | void>
@@ -62,6 +63,7 @@ export type SWRResult<T, Result = Readable<T | undefined>> = {
 const emptyKeyMock = {
   data: readable(undefined),
   error: readable(undefined),
+  processing: readable(false),
   refresh: async () => undefined,
   update: async () => undefined,
 }
@@ -115,11 +117,9 @@ export function swr<T>(
   const refresh = createRefresh(key, fetcher)
 
   const onSubscribe = readable(undefined, () => {
-    if (!store.last_update) {
-      refresh()
-    } else if (
-      maxAge !== undefined &&
-      Date.now() - maxAge > store.last_update
+    if (
+      !store.last_update ||
+      (maxAge !== undefined && Date.now() - maxAge > store.last_update)
     ) {
       refresh()
     }
@@ -133,7 +133,7 @@ export function swr<T>(
       })
     })
 
-    return () => unsubscribe_plugins.forEach((i) => i && i())
+    return () => unsubscribe_plugins.forEach((i) => i?.())
   })
 
   const data = updater
@@ -148,6 +148,7 @@ export function swr<T>(
   return {
     data,
     error: makeReadable(store.error, onSubscribe),
+    processing: derived(store.request, ($request) => !!$request),
     refresh: () => refresh(true),
     update<T>(fn: Updater<T>) {
       return updateCache<T>(key, fn)

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { swr } from '$lib'
+import { refreshInterval } from '$lib/plugin'
 
 type Profile = {
   nickname: string
@@ -13,19 +14,29 @@ const new_profile: Profile = {
   favorite_color: '#E34234',
 }
 
-const { data } = swr<Profile>('/api/profile', {
+const sleep = (timeout: number) => {
+  // Sleep to simulate network delay
+  return new Promise((resolve) => setTimeout(resolve, timeout))
+}
+
+const { data, processing } = swr<Profile>('/api/profile', {
   async fetcher(key) {
-    // Sleep to simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await sleep(500)
     const raw = localStorage.getItem(key)
 
     const result = raw ? JSON.parse(raw) : { ...new_profile }
     return result
   },
-  updater(key, value) {
+  async updater(key, value) {
     const raw = JSON.stringify(value)
+    await sleep(1000)
     localStorage.setItem(key, raw)
   },
+  plugins: [
+    refreshInterval({
+      interval: 5000,
+    }),
+  ],
 })
 </script>
 
@@ -56,4 +67,8 @@ const { data } = swr<Profile>('/api/profile', {
       <input type="color" bind:value={$data.favorite_color} />
     </label>
   </p>
+
+  {#if $processing}
+    <p>Refreshing Data...</p>
+  {/if}
 {/if}

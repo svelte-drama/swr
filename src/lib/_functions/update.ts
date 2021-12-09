@@ -20,7 +20,10 @@ export async function update<T>(
 ) {
   const store = getOrCreate<T>(key)
 
-  if (!force && store.request) return store.request
+  if (!force) {
+    const previous_request = get(store.request)
+    if (previous_request) return previous_request
+  }
 
   let request: Promise<T | void>
   if (isFunction(data)) {
@@ -30,24 +33,24 @@ export async function update<T>(
     request = Promise.resolve(data)
   }
 
-  store.request = request
+  store.request.set(request)
 
   try {
     const result = await request
-    if (store.request === request) {
+    if (get(store.request) === request) {
       if (result !== undefined) {
         store.data.set(result)
         store.error.set(undefined)
         store.last_update = Date.now()
       }
-      store.request = undefined
+      store.request.set(undefined)
     }
     return result
   } catch (e) {
-    if (store.request === request) {
+    if (get(store.request) === request) {
       store.error.set(e)
       store.last_update = Date.now()
-      store.request = undefined
+      store.request.set(undefined)
     }
     throw e
   }
