@@ -1,12 +1,9 @@
 import { get } from 'svelte/store'
 import { getOrCreate } from '../_cache.js'
 
-export type MaybePromise<T> = T | Promise<T>
-// eslint-disable-next-line @typescript-eslint/ban-types
-type NotFunction<T> = Exclude<T, Function>
-
+export type MaybePromise<T> = Promise<T> | T
 export type Updater<T> = (value?: T) => MaybePromise<T | void>
-type DataParam<T> = NotFunction<T> | Promise<T> | Updater<T>
+type DataParam<T> = Updater<T> | MaybePromise<T>
 
 // This is just to make typescript happy
 function isFunction<T>(data: DataParam<T>): data is Updater<T> {
