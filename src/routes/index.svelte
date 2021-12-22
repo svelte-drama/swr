@@ -1,5 +1,5 @@
 <script lang="ts">
-import { swr } from '$lib'
+import { swr } from '$lib/index'
 import { refreshInterval } from '$lib/plugin'
 
 type Profile = {

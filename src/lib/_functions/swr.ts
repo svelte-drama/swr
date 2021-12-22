@@ -1,9 +1,9 @@
 import { derived, readable } from 'svelte/store'
-import { getOrCreate } from '../_cache'
-import { update as updateCache } from './update'
-import type { MaybePromise, Updater } from './update'
 import type { Readable, Writable } from 'svelte/store'
-import type { SWRPlugin } from '../plugin'
+import { getOrCreate } from '../_cache.js'
+import { update as updateCache } from './update.js'
+import type { MaybePromise, Updater } from './update.js'
+import type { SWRPlugin } from '../plugin.js'
 
 function createRefresh<T>(key: string, fetcher: FetcherFn<T>) {
   return async function (force = false) {

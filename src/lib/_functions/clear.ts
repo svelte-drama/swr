@@ -1,4 +1,4 @@
-import { cache } from '../_cache'
+import { cache } from '../_cache.js'
 
 export function clear(key?: string) {
   if (key) {
