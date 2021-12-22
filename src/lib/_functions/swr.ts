@@ -77,7 +77,7 @@ export type SWROptions<T> = {
   plugins?: SWRPlugin[]
   updater?: UpdaterFn<T>
 }
-type SWROptionsWithUpdater<T> = SWROptions<T> & Pick<SWROptions<T>, 'updater'>
+type SWROptionsWithUpdater<T> = SWROptions<T> & Required<Pick<SWROptions<T>, 'updater'>>
 
 export function swr<T>(key: string | undefined): SWRResult<T>
 export function swr<T>(
