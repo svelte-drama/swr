@@ -117,12 +117,13 @@ export function swr<T>(
   const refresh = createRefresh(key, fetcher)
 
   const onSubscribe = readable(undefined, () => {
-    if (
-      !store.last_update ||
-      (maxAge !== undefined && Date.now() - maxAge > store.last_update)
-    ) {
+    if (maxAge !== undefined && Date.now() - maxAge > store.last_update) {
       refresh()
     }
+
+    const stale_unsubscribe = store.stale.subscribe(is_stale => {
+      if (is_stale) refresh()
+    })
 
     const unsubscribe_plugins = plugins.map((fn) => {
       return fn({
@@ -133,7 +134,10 @@ export function swr<T>(
       })
     })
 
-    return () => unsubscribe_plugins.forEach((i) => i?.())
+    return () => {
+      stale_unsubscribe()
+      unsubscribe_plugins.forEach((i) => i?.())
+    }
   })
 
   const data = updater

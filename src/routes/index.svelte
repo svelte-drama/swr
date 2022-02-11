@@ -21,6 +21,7 @@ const sleep = (timeout: number) => {
 
 const { data, processing } = swr<Profile>('/api/profile', {
   async fetcher(key) {
+    console.log("Fetching data...")
     await sleep(500)
     const raw = localStorage.getItem(key)
 

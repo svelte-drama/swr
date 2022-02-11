@@ -85,16 +85,26 @@ Delete a specific key from cache.
 
 ```js
 import { update } from '@svelte-drama/swr'
+```
 
+Update the cache at a specific key. Most useful when preloading data or when data needs to be reloaded from the server.
+
+```js
+update(key)
+```
+Mark data as stale, triggering any relevant fetcher functions fetch new data.
+
+```js
 update(key, new_value)
+```
+Set the cached value.
+
+```js
 update(key, async (value) => {
   return new_value
 })
 ```
-
-Update the cache at a specific key. The current value will be passed to the callback, which may be `undefined` if data has not been loaded for this key yet.
-
-Most useful when preloading data.
+The current value will be passed to the callback, which may be `undefined` if data has not been loaded for this key yet.
 
 ## Plugins
 

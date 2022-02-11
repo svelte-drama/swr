@@ -12,10 +12,15 @@ function isFunction<T>(data: DataParam<T>): data is Updater<T> {
 
 export async function update<T>(
   key: string,
-  data: DataParam<T | void>,
+  data?: DataParam<T | void>,
   force = true
 ) {
   const store = getOrCreate<T>(key)
+
+  if (!data) {
+    store.stale.set(true)
+    return
+  }
 
   if (!force) {
     const previous_request = get(store.request)
@@ -39,6 +44,7 @@ export async function update<T>(
         store.data.set(result)
         store.error.set(undefined)
         store.last_update = Date.now()
+        store.stale.set(false)
       }
       store.request.set(undefined)
     }
@@ -48,6 +54,7 @@ export async function update<T>(
       store.error.set(e)
       store.last_update = Date.now()
       store.request.set(undefined)
+      store.stale.set(false)
     }
     throw e
   }
