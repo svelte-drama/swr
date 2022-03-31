@@ -17,7 +17,7 @@ export async function update<T>(
 ) {
   const store = getOrCreate<T>(key)
 
-  if (!data) {
+  if (data === undefined) {
     store.stale.set(true)
     return
   }
