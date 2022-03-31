@@ -43,7 +43,7 @@ export async function update<T>(
       if (result !== undefined) {
         store.data.set(result)
         store.error.set(undefined)
-        store.last_update = Date.now()
+        store.last_update.set(Date.now())
         store.stale.set(false)
       }
       store.request.set(undefined)
@@ -52,7 +52,7 @@ export async function update<T>(
   } catch (e) {
     if (get(store.request) === request) {
       store.error.set(e)
-      store.last_update = Date.now()
+      store.last_update.set(Date.now())
       store.request.set(undefined)
       store.stale.set(false)
     }

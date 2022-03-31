@@ -35,7 +35,7 @@ const { data, error, refresh, update } = swr(key, options) // or "swr(key, optio
 
 - `options.maxAge`: `number`
 
-  If data in the cache is older than `maxAge` in milliseconds, a new request to refresh the data will be launched in the background.
+  If data in the cache is older than `maxAge` in milliseconds, a new request to refresh the data will be launched in the background. This check only occurs during initializtion. To do continous polling, see [refreshInterval]((https://github.com/svelte-drama/swr#refreshInterval).
 
 - `options.plugins`: `SWRPlugin[]`
 
@@ -92,11 +92,13 @@ Update the cache at a specific key. Most useful when preloading data or when dat
 ```js
 update(key)
 ```
+
 Mark data as stale, triggering any relevant fetcher functions fetch new data.
 
 ```js
 update(key, new_value)
 ```
+
 Set the cached value.
 
 ```js
@@ -104,6 +106,7 @@ update(key, async (value) => {
   return new_value
 })
 ```
+
 The current value will be passed to the callback, which may be `undefined` if data has not been loaded for this key yet.
 
 ## Plugins
@@ -119,7 +122,7 @@ const { data, error } = swr(key, {
 })
 ```
 
-As long as a subscription to `data` or `error` exists, a request to refresh data will be made every `interval` in milliseconds.
+While a subscription to `data` or `error` exists, a request to refresh data will be made if data was last updated at least `interval` milliseconds ago and the current page is visible to the user.
 
 ### refreshOnFocus
 
@@ -132,7 +135,7 @@ const { data, error } = swr(key, {
 })
 ```
 
-As long as a subscription to `data` or `error` exists, a request to refresh data will be made whenver this window gains focus.
+Treat data as stale if it was last updated prior to the most recent time this window gained focus.
 
 ### refreshOnReconnect
 
@@ -145,7 +148,7 @@ const { data, error } = swr(key, {
 })
 ```
 
-As long as a subscription to `data` or `error` exists, a request to refresh data will be made whenver the browser reconnects to the internet.
+Treat data as stale if it was last updated prior to the most recent ("online" event)[https://developer.mozilla.org/en-US/docs/Web/API/Window/online_event].
 
 ### suspend
 

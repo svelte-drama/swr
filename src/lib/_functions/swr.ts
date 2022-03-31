@@ -1,9 +1,9 @@
-import { derived, readable } from 'svelte/store'
+import { derived, get as getValue, readable } from 'svelte/store'
 import type { Readable, Writable } from 'svelte/store'
 import { getOrCreate } from '../_cache.js'
+import type { SWRPlugin } from '../types.js'
 import { update as updateCache } from './update.js'
 import type { MaybePromise, Updater } from './update.js'
-import type { SWRPlugin } from '../plugin.js'
 
 function createRefresh<T>(key: string, fetcher: FetcherFn<T>) {
   return async function (force = false) {
@@ -77,7 +77,8 @@ export type SWROptions<T> = {
   plugins?: SWRPlugin[]
   updater?: UpdaterFn<T>
 }
-type SWROptionsWithUpdater<T> = SWROptions<T> & Required<Pick<SWROptions<T>, 'updater'>>
+type SWROptionsWithUpdater<T> = SWROptions<T> &
+  Required<Pick<SWROptions<T>, 'updater'>>
 
 export function swr<T>(key: string | undefined): SWRResult<T>
 export function swr<T>(
@@ -117,11 +118,14 @@ export function swr<T>(
   const refresh = createRefresh(key, fetcher)
 
   const onSubscribe = readable(undefined, () => {
-    if (maxAge !== undefined && Date.now() - maxAge > store.last_update) {
+    if (
+      maxAge !== undefined &&
+      Date.now() - maxAge > getValue(store.last_update)
+    ) {
       refresh()
     }
 
-    const stale_unsubscribe = store.stale.subscribe(is_stale => {
+    const stale_unsubscribe = store.stale.subscribe((is_stale) => {
       if (is_stale) refresh()
     })
 
@@ -130,6 +134,7 @@ export function swr<T>(
         key,
         data: store.data,
         error: store.error,
+        last_update: store.last_update,
         refresh,
       })
     })

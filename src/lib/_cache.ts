@@ -4,7 +4,7 @@ import type { Writable } from 'svelte/store'
 export type CacheObject<T> = {
   data: Writable<T | undefined>
   error: Writable<Error | undefined>
-  last_update: number
+  last_update: Writable<number>
   request: Writable<Promise<T | void> | undefined>
   stale: Writable<boolean>
 }
@@ -14,9 +14,9 @@ function createCacheItem<T>(key: string) {
   const store: CacheObject<T> = {
     data: writable<T>(),
     error: writable(),
-    last_update: 0,
+    last_update: writable(0),
     request: writable(undefined),
-    stale: writable(true)
+    stale: writable(true),
   }
   cache.set(key, store)
   return store

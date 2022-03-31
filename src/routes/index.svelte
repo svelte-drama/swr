@@ -1,6 +1,6 @@
 <script lang="ts">
 import { swr } from '$lib/index'
-import { refreshInterval } from '$lib/plugin'
+import { refreshOnFocus } from '$lib/plugin'
 
 type Profile = {
   nickname: string
@@ -21,7 +21,7 @@ const sleep = (timeout: number) => {
 
 const { data, processing } = swr<Profile>('/api/profile', {
   async fetcher(key) {
-    console.log("Fetching data...")
+    console.log('Fetching data...')
     await sleep(500)
     const raw = localStorage.getItem(key)
 
@@ -33,11 +33,7 @@ const { data, processing } = swr<Profile>('/api/profile', {
     await sleep(1000)
     localStorage.setItem(key, raw)
   },
-  plugins: [
-    refreshInterval({
-      interval: 5000,
-    }),
-  ],
+  plugins: [refreshOnFocus()],
 })
 </script>
 
