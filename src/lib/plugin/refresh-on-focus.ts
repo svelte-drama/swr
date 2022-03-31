@@ -1,6 +1,6 @@
 import { derived, writable } from 'svelte/store'
-import type { SWRPlugin } from '$lib/types.js'
-import { memoize } from '$lib/_memoize.js'
+import type { SWRPlugin } from '../types.js'
+import { memoize } from '../_memoize.js'
 
 const getLastFocusTimestamp = memoize(() => {
   const timestamp = writable(0)

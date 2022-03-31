@@ -1,5 +1,5 @@
 import { createSuspense } from '@svelte-drama/suspense'
-import type { SWRPlugin } from '$lib/types.js'
+import type { SWRPlugin } from '../types.js'
 
 export function suspend(): SWRPlugin {
   const suspend = createSuspense()

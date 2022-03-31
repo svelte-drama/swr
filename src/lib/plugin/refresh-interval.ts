@@ -1,5 +1,5 @@
-import type { SWRPlugin } from '$lib/types.js'
-import { memoize } from '$lib/_memoize'
+import type { SWRPlugin } from '../types.js'
+import { memoize } from '../_memoize'
 import { derived, readable } from 'svelte/store'
 
 const createTimer = memoize(() => {
