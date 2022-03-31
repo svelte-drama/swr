@@ -148,7 +148,7 @@ const { data, error } = swr(key, {
 })
 ```
 
-Treat data as stale if it was last updated prior to the most recent ("online" event)[https://developer.mozilla.org/en-US/docs/Web/API/Window/online_event].
+Treat data as stale if it was last updated prior to the most recent ["online" event](https://developer.mozilla.org/en-US/docs/Web/API/Window/online_event).
 
 ### suspend
 
