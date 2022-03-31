@@ -1,4 +1,4 @@
-export { refreshInterval } from './plugin/refresh-interval.js'
-export { refreshOnFocus } from './plugin/refresh-on-focus.js'
-export { refreshOnReconnect } from './plugin/refresh-on-reconnect.js'
-export { suspend } from './plugin/suspend.js'
+export { refreshInterval } from './_plugins/refresh-interval.js'
+export { refreshOnFocus } from './_plugins/refresh-on-focus.js'
+export { refreshOnReconnect } from './_plugins/refresh-on-reconnect.js'
+export { suspend } from './_plugins/suspend.js'
