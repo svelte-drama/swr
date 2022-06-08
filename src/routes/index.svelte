@@ -1,8 +1,7 @@
 <script lang="ts" context="module">
-import type { Load } from '@sveltejs/kit';
+import type { Load } from '@sveltejs/kit'
 import { swr } from '$lib/index'
 import { refreshOnFocus } from '$lib/plugin'
-
 
 const sleep = (timeout: number) => {
   // Sleep to simulate network delay

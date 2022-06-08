@@ -64,7 +64,9 @@ export type SWRResult<T, Result = Readable<T | undefined>> = {
 const emptyKeyMock = {
   data: readable(undefined),
   error: readable(undefined),
-  fetch: async () => { throw new Error('Undefined key') },
+  fetch: async () => {
+    throw new Error('Undefined key')
+  },
   processing: readable(false),
   refresh: async () => undefined,
   update: async () => undefined,
@@ -119,11 +121,14 @@ export function swr<T>(
   const store = getOrCreate<T>(key)
   const refresh = createRefresh(key, fetcher)
 
+  function isExpired() {
+    return (
+      maxAge !== undefined && Date.now() - maxAge > getValue(store.last_update)
+    )
+  }
+
   const onSubscribe = readable(undefined, () => {
-    if (
-      maxAge !== undefined &&
-      Date.now() - maxAge > getValue(store.last_update)
-    ) {
+    if (isExpired()) {
       refresh()
     }
 
@@ -159,7 +164,12 @@ export function swr<T>(
   return {
     data,
     error: makeReadable(store.error, onSubscribe),
-    fetch: () => refresh(),
+    async fetch() {
+      if (isExpired() || getValue(store.stale)) return refresh()
+
+      const value = getValue(store.data)
+      return value === undefined ? refresh() : value
+    },
     processing: derived(store.request, ($request) => !!$request),
     refresh: () => refresh(true),
     update<T>(fn: Updater<T>) {
