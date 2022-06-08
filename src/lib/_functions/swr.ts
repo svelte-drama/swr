@@ -55,14 +55,16 @@ function makeWritable<T>({
 
 export type SWRResult<T, Result = Readable<T | undefined>> = {
   data: Result
-  processing: Readable<boolean>
   error: Readable<Error | undefined>
+  fetch: () => Promise<T>
+  processing: Readable<boolean>
   refresh: () => Promise<void>
   update: (fn: Updater<T>) => Promise<T | void>
 }
 const emptyKeyMock = {
   data: readable(undefined),
   error: readable(undefined),
+  fetch: async () => { throw new Error('Undefined key') },
   processing: readable(false),
   refresh: async () => undefined,
   update: async () => undefined,
@@ -157,6 +159,7 @@ export function swr<T>(
   return {
     data,
     error: makeReadable(store.error, onSubscribe),
+    fetch: () => refresh(),
     processing: derived(store.request, ($request) => !!$request),
     refresh: () => refresh(true),
     update<T>(fn: Updater<T>) {

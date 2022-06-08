@@ -55,6 +55,10 @@ const { data, error, refresh, update } = swr(key, options) // or "swr(key, optio
 
   A Svelte readable store containing an error if the most recent request to `fetcher` threw an error. `data` and `error` may both contain data if a request was successful and a later refresh encountered an error.
 
+- `fetch`: `Promise`
+
+  Returns data from the most recent request, or issues a new request if none has been cached.
+
 - `processing`: `Readable<boolean>`
 
   A Svelte readable store indicating if is a request is currently in progress. Useful for showing background activity indicators.

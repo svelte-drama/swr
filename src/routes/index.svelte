@@ -1,6 +1,13 @@
-<script lang="ts">
+<script lang="ts" context="module">
+import type { Load } from '@sveltejs/kit';
 import { swr } from '$lib/index'
 import { refreshOnFocus } from '$lib/plugin'
+
+
+const sleep = (timeout: number) => {
+  // Sleep to simulate network delay
+  return new Promise((resolve) => setTimeout(resolve, timeout))
+}
 
 type Profile = {
   nickname: string
@@ -14,12 +21,7 @@ const new_profile: Profile = {
   favorite_color: '#E34234',
 }
 
-const sleep = (timeout: number) => {
-  // Sleep to simulate network delay
-  return new Promise((resolve) => setTimeout(resolve, timeout))
-}
-
-const { data, processing } = swr<Profile>('/api/profile', {
+const { data, fetch, processing } = swr<Profile>('/api/profile', {
   async fetcher(key) {
     console.log('Fetching data...')
     await sleep(500)
@@ -35,6 +37,12 @@ const { data, processing } = swr<Profile>('/api/profile', {
   },
   plugins: [refreshOnFocus()],
 })
+
+export const load: Load = async () => {
+  const data = await fetch()
+  console.log(data)
+  return {}
+}
 </script>
 
 <h1>My Profile</h1>
