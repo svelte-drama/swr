@@ -14,15 +14,14 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          registry-url: https://registry.npmjs.org/
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
-        with:
-          version: 6.32.3
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
+      - run: pnpm run check
+
       - run: pnpm publish package --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
