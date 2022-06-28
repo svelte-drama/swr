@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@svelte-drama/suspense': ^0.3.6
-  '@sveltejs/kit': ^1.0.0-next.355
+  '@sveltejs/kit': 1.0.0-next.336
   '@typescript-eslint/eslint-plugin': ^5.30.0
   '@typescript-eslint/parser': ^5.30.0
   eslint: ^8.18.0
@@ -19,7 +19,7 @@ specifiers:
 
 devDependencies:
   '@svelte-drama/suspense': 0.3.6_svelte@3.48.0
-  '@sveltejs/kit': 1.0.0-next.355_svelte@3.48.0
+  '@sveltejs/kit': 1.0.0-next.336_svelte@3.48.0
   '@typescript-eslint/eslint-plugin': 5.30.0_5mtqsiui4sk53pmkx7i7ue45wm
   '@typescript-eslint/parser': 5.30.0_b5e7v2qnwxfo6hmiq56u52mz3e
   eslint: 8.18.0
@@ -121,9 +121,9 @@ packages:
       svelte: 3.48.0
     dev: true
 
-  /@sveltejs/kit/1.0.0-next.355_svelte@3.48.0:
-    resolution: {integrity: sha512-4M+BZL/kKgw5tMRkAYcpg38hxMX80iz6H9+nv2v6VzvKhD4Pw6zatzMs2D6PCT2uBHnrKGrUCheBBcK8kZdWKg==}
-    engines: {node: '>=16.7'}
+  /@sveltejs/kit/1.0.0-next.336_svelte@3.48.0:
+    resolution: {integrity: sha512-DfERqclfwI8Gdx8/p5qIU3vwEOQfWqC8+BXR12bNykbXFM1k8koDplRDpmGzcsXyhslf83j+RmchnkifbNLjsw==}
+    engines: {node: '>=16'}
     hasBin: true
     peerDependencies:
       svelte: ^3.44.0
