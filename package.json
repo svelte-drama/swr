@@ -7,7 +7,7 @@
   "version": "0.2.6",
   "scripts": {
     "dev": "svelte-kit dev",
-    "build": "svelte-kit build && svelte-kit package",
+    "build": "svelte-kit package",
     "check": "svelte-check --fail-on-hints --fail-on-warnings --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
