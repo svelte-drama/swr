@@ -35,7 +35,7 @@ const { data, error, refresh, update } = swr(key, options) // or "swr(key, optio
 
 - `options.maxAge`: `number`
 
-  If data in the cache is older than `maxAge` in milliseconds, a new request to refresh the data will be launched in the background. This check only occurs during initializtion. To do continous polling, see [refreshInterval]((https://github.com/svelte-drama/swr#refreshInterval).
+  If data in the cache is older than `maxAge` in milliseconds, a new request to refresh the data will be launched in the background. This check only occurs during initializtion. To do continous polling, see [refreshInterval](https://github.com/svelte-drama/swr#refreshInterval).
 
 - `options.plugins`: `SWRPlugin[]`
 
