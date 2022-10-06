@@ -145,7 +145,7 @@ Treat data as stale if it was last updated prior to the most recent time this wi
 
 ```js
 import { swr } from '@svelte-drama/swr'
-import { refreshOnFocus } from '@svelte-drama/swr/plugin'
+import { refreshOnReconnect } from '@svelte-drama/swr/plugin'
 
 const { data, error } = swr(key, {
   plugins: [refreshOnReconnect()],
