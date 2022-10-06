@@ -3,7 +3,7 @@ import { getOrCreate } from '../_cache.js'
 
 export type MaybePromise<T> = Promise<T> | T
 export type Updater<T> = (value?: T) => MaybePromise<T | void>
-type DataParam<T> = Updater<T> | MaybePromise<T>
+type DataParam<T> = Updater<T> | MaybePromise<T | void>
 
 // This is just to make typescript happy
 function isFunction<T>(data: DataParam<T>): data is Updater<T> {
@@ -12,7 +12,7 @@ function isFunction<T>(data: DataParam<T>): data is Updater<T> {
 
 export async function update<T>(
   key: string,
-  data?: DataParam<T | void>,
+  data?: DataParam<T>,
   force = true
 ) {
   const store = getOrCreate<T>(key)
@@ -51,7 +51,12 @@ export async function update<T>(
     return result
   } catch (e) {
     if (get(store.request) === request) {
-      store.error.set(e)
+      if (e instanceof Error) {
+        store.error.set(e)
+      } else {
+        const error = new Error(e + '')
+        store.error.set(error)
+      }
       store.last_update.set(Date.now())
       store.request.set(undefined)
       store.stale.set(false)

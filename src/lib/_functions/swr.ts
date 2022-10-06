@@ -17,7 +17,7 @@ function makeReadable<T>(store: Readable<T>, onSubscribe: Readable<unknown>) {
 
 type MakeWritableParams<T> = {
   key: string
-  store: Writable<T>
+  store: Writable<T | undefined>
   onSubscribe: Readable<unknown>
   updater: UpdaterFn<T>
 }
@@ -50,7 +50,7 @@ function makeWritable<T>({
     set,
     subscribe,
     update,
-  } as Writable<T>
+  } as Writable<T | undefined>
 }
 
 export type SWRResult<T, Result = Readable<T | undefined>> = {
