@@ -34,7 +34,7 @@ const { data, fetch, processing } = swr<Profile>('/api/profile', {
     await sleep(1000)
     localStorage.setItem(key, raw)
   },
-  plugins: [refreshOnFocus()],
+  plugins: [refreshOnFocus({ sameOrigin: true })],
 })
 
 export const load: Load = async () => {

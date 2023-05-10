@@ -137,9 +137,13 @@ import { refreshOnFocus } from '@svelte-drama/swr/plugin'
 const { data, error } = swr(key, {
   plugins: [refreshOnFocus()],
 })
+
+const { data, error } = swr(key, {
+  plugins: [refreshOnFocus({ sameOrigin: true })],
+})
 ```
 
-Treat data as stale if it was last updated prior to the most recent time this window gained focus.
+Treat data as stale if it was last updated prior to the most recent time this window gained focus.  If `sameOrigin` is set, data will be refreshed only if another tab running on the same origin was visited since the last time data was fetched.
 
 ### refreshOnReconnect
 
