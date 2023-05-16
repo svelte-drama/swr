@@ -18,7 +18,7 @@ const swr = SWR({
   partition: 'user_id',
   suspense: createSuspense,
 })
-const Pokemon = swr({
+const Pokemon = swr.model({
   key(id: number) {
     return `https://pokeapi.co/api/v2/pokemon/${id}/`
   },
@@ -29,7 +29,7 @@ const Pokemon = swr({
   },
   version: '05-11-2023',
 })
-const Note = swr({
+const Note = swr.model({
   key(name: string) {
     return `/api/notes/${name}`
   },

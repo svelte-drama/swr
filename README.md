@@ -8,6 +8,10 @@ This is a data management/fetching library written for Svelte, inspired by [SWR]
 npm install --save @svelte-suspense/swr
 ```
 
+## Requirements
+
+SWR makes use of [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API), and [LockManager](https://developer.mozilla.org/en-US/docs/Web/API/LockManager) to coordinate communication.  If these are are unavailable, an in memory fallback will be used but cache states will not be shared between tabs.
+
 ## Usage
 
 ### SWR
@@ -15,10 +19,10 @@ npm install --save @svelte-suspense/swr
 ```ts
 import { SWR } from '@svelte-drama/swr
 
-const createModel = SWR(options?)
+const swr = SWR(options?)
 ```
 
-Creates a new SWR instance. Returns a function to create individual models.
+Creates a new SWR instance.
 
 #### Options
 
@@ -30,14 +34,22 @@ Creates a new SWR instance. Returns a function to create individual models.
 
   The partition key for cache segregation. Typically, this would be a user id so that data for different users is stored in different caches.
 
-- `suspend: createSuspense`
+- `suspend?: createSuspense`
 
   If integration with [@svelte-drama/suspense](https://www.npmjs.com/package/@svelte-drama/suspense) is desired, pass `createSuspense` from that package here. All calls to `model.live()` will automatically call `createSuspense`.
 
-### Model
+### swr.clear
 
 ```ts
-const model = createModel<ID, MODEL>({
+await swr.clear()
+```
+
+Clears all cached data for this partition.
+
+### swr.model
+
+```ts
+const model = swr.model<ID, MODEL>({
   key(id: ID) {
     return `/api/endpoint/${id}`
   },
@@ -86,7 +98,3 @@ The returned object `model` has several functions for fetching data.
   `model.update(id: ID, fn: (data: MODEL) => MaybePromise<MODEL>) => Promise<MODEL>`
 
   Update data in the cache.
-
-## TODO
-
-- Ability to clear cache data from a partition

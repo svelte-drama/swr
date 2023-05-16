@@ -8,6 +8,11 @@ import type { Cache, CacheEntry } from './types.js'
 const DB_CONNECTIONS = new Map<Partition, Promise<IDBDatabase>>()
 const STORE_NAME = 'cache'
 
+export async function clearDatabaseParition(partition: Partition) {
+  const db = await openDatabase(partition)
+  return makeRequest(db, 'readwrite', store => store.clear())
+}
+
 export function IndexedDBCache({
   broadcaster,
   partition,

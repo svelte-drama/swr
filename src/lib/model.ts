@@ -1,14 +1,9 @@
-import { Broadcaster } from '$lib/broadcaster.js'
-import type { Broadcaster as BroadcasterType } from '$lib/broadcaster/types.js'
-import { IndexedDBCache } from '$lib/cache/indexeddb-cache.js'
-import { MemoryCache } from '$lib/cache/memory-cache.js'
-import type { Cache } from '$lib/cache/types.js'
 import { atomicUpdate } from '$lib/model/atomic-update.js'
 import { fetch } from '$lib/model/fetch.js'
+import { createInternals } from '$lib/model/internals.js'
 import { live } from '$lib/model/live.js'
 import { refresh } from '$lib/model/refresh.js'
 import { update as runUpdate } from '$lib/model/update.js'
-import { RequestPool } from '$lib/request-pool.js'
 import type {
   CreateSuspenseFn,
   Fetcher,
@@ -16,15 +11,7 @@ import type {
   ModelVersion,
   Partition,
 } from '$lib/types.js'
-import { getOrSet } from '$lib/util/get-or-set.js'
 import { readable } from 'svelte/store'
-
-type Shared = {
-  broadcaster: BroadcasterType
-  cache: Cache
-  request_pool: RequestPool
-}
-const shared_cache = new Map<Partition, Map<ModelVersion, Shared>>()
 
 export type ModelParams<ID, T> = {
   fetcher: Fetcher<ID, T>
@@ -42,34 +29,9 @@ export function model<ID, T>(
   swr_options: ModelPrivateOptions
 ) {
   const createKey = model_options.key
-
   const partition = swr_options.partition
   const version = model_options.version ?? ''
-  const partition_internals = getOrSet<Partition, Map<ModelVersion, Shared>>(
-    shared_cache,
-    partition,
-    () => new Map()
-  )
-  const internals = getOrSet<ModelVersion, Shared>(
-    partition_internals,
-    version,
-    () => {
-      const broadcaster = Broadcaster(partition, version)
-      const cache =
-        typeof indexedDB === 'undefined'
-          ? MemoryCache(broadcaster)
-          : IndexedDBCache({
-              broadcaster,
-              partition,
-              version,
-            })
-      return {
-        broadcaster,
-        cache,
-        request_pool: RequestPool(partition, version),
-      }
-    }
-  )
+  const internals = createInternals(partition, version)
 
   function getOptions(params: ID) {
     const key = createKey(params)
