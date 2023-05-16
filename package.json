@@ -1,0 +1,44 @@
+{
+  "name": "www-swr",
+  "version": "1.0.0-alpha.1",
+  "packageManager": "pnpm@8.3.1",
+  "scripts": {
+    "dev": "vite dev",
+    "package": "svelte-kit sync && svelte-package && publint",
+    "prepublishOnly": "npm run package",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "format": "prettier --plugin-search-dir . --write ."
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
+  ],
+  "peerDependencies": {
+    "svelte": "^3.54.0"
+  },
+  "devDependencies": {
+    "@svelte-drama/suspense": "^0.3.10",
+    "@sveltejs/adapter-auto": "^2.0.1",
+    "@sveltejs/kit": "^1.16.3",
+    "@sveltejs/package": "^2.0.2",
+    "husky": "^8.0.3",
+    "prettier": "^2.8.8",
+    "prettier-plugin-svelte": "^2.10.0",
+    "publint": "^0.1.11",
+    "svelte": "^3.59.1",
+    "svelte-check": "^3.3.2",
+    "tslib": "^2.5.0",
+    "typescript": "^5.0.4",
+    "vite": "^4.3.5"
+  },
+  "svelte": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module"
+}
