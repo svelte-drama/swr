@@ -1,6 +1,6 @@
 import type { Readable } from 'svelte/store'
 
-export type CreateSuspenseFn = () => <T>(
+export type SuspenseFn = <T>(
   data: Readable<T | undefined>,
   error: Readable<unknown>
 ) => Readable<T | undefined>

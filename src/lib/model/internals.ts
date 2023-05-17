@@ -3,10 +3,7 @@ import type { Broadcaster as BroadcasterType } from '$lib/broadcaster/types.js'
 import { IndexedDBCache } from '$lib/cache/indexeddb-cache.js'
 import type { Cache } from '$lib/cache/types.js'
 import { RequestPool } from '$lib/request-pool.js'
-import type {
-  ModelVersion,
-  Partition,
-} from '$lib/types.js'
+import type { ModelVersion, Partition } from '$lib/types.js'
 import { getOrSet } from '$lib/util/get-or-set.js'
 
 type Interals = {
@@ -18,23 +15,19 @@ const internals_cache = new Map<Partition, Map<ModelVersion, Interals>>()
 
 export function createInternals(partition: Partition, version: ModelVersion) {
   const partition_internals = getPartitionCache(partition)
-  return getOrSet<ModelVersion, Interals>(
-    partition_internals,
-    version,
-    () => {
-      const broadcaster = Broadcaster(partition, version)
-      const cache = IndexedDBCache({
-        broadcaster,
-        partition,
-        version,
-      })
-      return {
-        broadcaster,
-        cache,
-        request_pool: RequestPool(partition, version),
-      }
+  return getOrSet<ModelVersion, Interals>(partition_internals, version, () => {
+    const broadcaster = Broadcaster(partition, version)
+    const cache = IndexedDBCache({
+      broadcaster,
+      partition,
+      version,
+    })
+    return {
+      broadcaster,
+      cache,
+      request_pool: RequestPool(partition, version),
     }
-  )
+  })
 }
 
 export async function clearPartitionCache(partition: Partition) {

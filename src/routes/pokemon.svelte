@@ -1,6 +1,4 @@
 <script lang="ts" context="module">
-import { createSuspense } from '@svelte-drama/suspense'
-
 type Pokemon = {
   species: {
     name: string
@@ -16,7 +14,6 @@ const sleep = () => new Promise((resolve) => setTimeout(resolve, 500))
 const swr = SWR({
   maxAge: 30 * 60 * 1000,
   partition: 'user_id',
-  suspense: createSuspense,
 })
 const Pokemon = swr.model({
   key(id: number) {
@@ -43,11 +40,14 @@ const Note = swr.model({
 </script>
 
 <script lang="ts">
+import { createSuspense } from '@svelte-drama/suspense'
 import { SWR } from '$lib/index.js'
 
+const suspend = createSuspense()
+
 export let number: number
-$: data = Pokemon.live(number)
-$: note = Note.live($data?.species.name)
+$: data = Pokemon.live(number, suspend)
+$: note = Note.live($data?.species.name, suspend)
 
 function onChange(e: { currentTarget: HTMLTextAreaElement }) {
   if (!$data) throw new TypeError()

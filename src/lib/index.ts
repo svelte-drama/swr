@@ -1,21 +1,21 @@
 import { clearDatabaseParition } from '$lib/cache/indexeddb-cache.js'
 import { model, type ModelParams } from '$lib/model.js'
 import { clearPartitionCache } from '$lib/model/internals.js'
-import type { CreateSuspenseFn, Partition } from '$lib/types.js'
+import type { Partition } from '$lib/types.js'
 
-export function SWR(options: {
-  maxAge?: number
-  partition?: Partition
-  suspense?: CreateSuspenseFn
-} = {}) {
+export function SWR(
+  options: {
+    maxAge?: number
+    partition?: Partition
+  } = {}
+) {
   const maxAge = options.maxAge ?? 0
   const partition = options.partition ?? ''
-  const suspense = options.suspense
 
   return {
     async clear() {
       try {
-        await clearDatabaseParition(partition)        
+        await clearDatabaseParition(partition)
       } catch (e) {
         console.error(e)
       }
@@ -25,8 +25,7 @@ export function SWR(options: {
       return model(params, {
         maxAge,
         partition,
-        suspense,
       })
-    }
+    },
   }
 }

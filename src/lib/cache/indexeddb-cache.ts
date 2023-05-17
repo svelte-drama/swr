@@ -10,7 +10,7 @@ const STORE_NAME = 'cache'
 
 export async function clearDatabaseParition(partition: Partition) {
   const db = await openDatabase(partition)
-  return makeRequest(db, 'readwrite', store => store.clear())
+  return makeRequest(db, 'readwrite', (store) => store.clear())
 }
 
 export function IndexedDBCache({

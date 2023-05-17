@@ -5,11 +5,11 @@ import { live } from '$lib/model/live.js'
 import { refresh } from '$lib/model/refresh.js'
 import { update as runUpdate } from '$lib/model/update.js'
 import type {
-  CreateSuspenseFn,
   Fetcher,
   MaybePromise,
   ModelVersion,
   Partition,
+  SuspenseFn,
 } from '$lib/types.js'
 import { readable } from 'svelte/store'
 
@@ -22,7 +22,6 @@ export type ModelParams<ID, T> = {
 type ModelPrivateOptions = {
   maxAge: number
   partition: Partition
-  suspense?: CreateSuspenseFn
 }
 export function model<ID, T>(
   model_options: ModelParams<ID, T>,
@@ -63,13 +62,13 @@ export function model<ID, T>(
       const options = getOptions(params)
       return fetch<T>(options)
     },
-    live(params?: ID) {
+    live(params?: ID, suspend?: SuspenseFn) {
       if (createKey.length && params === undefined) {
         return readable<undefined>()
       }
       // If createKey.length is zero, then there are no required params
       const options = getOptions(params!)
-      return live<T>(options)
+      return live<T>(options, suspend)
     },
     refresh(params: ID) {
       const options = getOptions(params)
