@@ -22,10 +22,12 @@ export function IndexedDBCache({
   partition: Partition
   version: ModelVersion
 }): Cache {
-  const cache = CreateIndexedDBCache(partition, version).catch((e) => {
-    console.error(e)
-    return MemoryCache(broadcaster)
-  })
+  const cache = typeof indexedDB === 'undefined'
+    ? MemoryCache(broadcaster)
+    : CreateIndexedDBCache(partition, version).catch((e) => {
+      console.error(e)
+      return MemoryCache(broadcaster)
+    })
 
   return {
     async clear() {

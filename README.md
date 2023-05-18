@@ -78,6 +78,10 @@ const model = swr.model<ID, MODEL>({
 
 The returned object `model` has several functions for fetching data.
 
+- `model.delete(id: ID) => Promise<void>`
+
+  Delete data from cache.  Any `live` stores with subscribers will cause the data to refresh.
+
 - `model.fetch(id: ID) => Promise<MODEL>`
 
   Returns data from cache if less than `maxAge` or performs a request using the provided `fetcher`

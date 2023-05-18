@@ -4,9 +4,13 @@ import type { Cache, CacheEntry } from './types.js'
 export function MemoryCache(broadcaster: Broadcaster): Cache {
   const cache = new Map<string, CacheEntry>()
 
-  broadcaster.onAllData((message) => {
-    if (message.foreign) {
-      cache.set(message.key, message.data)
+  broadcaster.onAllData((message, foreign) => {
+    if (foreign) {
+      if (message.type === 'data') {
+        cache.set(message.key, message.data)
+      } else if (message.type === 'delete') {
+        cache.delete(message.key)
+      }
     }
   })
 

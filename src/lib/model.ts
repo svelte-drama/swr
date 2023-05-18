@@ -58,6 +58,11 @@ export function model<ID, T>(
   }
 
   return {
+    async delete(params: ID) {
+      const key = createKey(params)
+      await internals.cache.delete(key)
+      internals.broadcaster.dispatchDelete(key)
+    },
     fetch(params: ID) {
       const options = getOptions(params)
       return fetch<T>(options)
