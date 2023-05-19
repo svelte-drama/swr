@@ -7,8 +7,6 @@ import type {
 import type { RequestPool } from '$lib/request-pool.js'
 import type { Internals } from './internals.js'
 
-const APP_START_TIME = Date.now()
-
 type FetchParams<T> = {
   db: IndexedDBCache
   broadcaster: Broadcaster
@@ -65,7 +63,6 @@ export function isCurrent<T>(
 ): object is CacheEntry<T> {
   return (
     !!object &&
-    object.updated > APP_START_TIME &&
     object.updated + maxAge > Date.now()
   )
 }
