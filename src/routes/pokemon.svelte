@@ -47,7 +47,9 @@ const suspend = createSuspense()
 
 export let number: number
 $: data = Pokemon.live(number, suspend)
+$: console.log('DATA', $data)
 $: note = Note.live($data?.species.name, suspend)
+$: console.log('NOTE', $note)
 
 function onChange(e: { currentTarget: HTMLTextAreaElement }) {
   if (!$data) throw new TypeError()

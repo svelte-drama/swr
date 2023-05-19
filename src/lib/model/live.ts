@@ -1,38 +1,31 @@
 import type { Broadcaster } from '$lib/broadcaster/types.js'
-import type { Cache } from '$lib/cache/types.js'
-import type { RequestPool } from '$lib/request-pool.js'
+import type { CacheEntry, MemoryCache } from '$lib/cache/types.js'
 import type { SuspenseFn } from '$lib/types.js'
-import { fetch } from './fetch.js'
 import { writable, type Readable } from 'svelte/store'
 
 type LiveParams<T> = {
   broadcaster: Broadcaster
-  cache: Cache
-  fetcher(): Promise<T>
   key: string
-  maxAge: number
-  request_pool: RequestPool
+  memory: MemoryCache
 }
 export function live<T>(
-  { broadcaster, cache, fetcher, key, maxAge, request_pool }: LiveParams<T>,
+  { broadcaster, key, memory }: LiveParams<T>,
+  runFetch: () => Promise<CacheEntry<T>>,
   suspend?: SuspenseFn
 ): Readable<T | undefined> {
-  const runFetch = () => fetch({
-    broadcaster,
-    cache,
-    fetcher,
-    key,
-    maxAge,
-    request_pool,
-  })
-  const data = writable<T | undefined>(undefined, (set) => {
-    runFetch().then(set)
-    const unsub_data = broadcaster.onData<T>(key, (object) => {
-      set(object.data)
-    })
-    const unsub_delete = broadcaster.onDelete(key, () => {
-      runFetch()
-    })
+  let value = memory.get<T>(key)
+  const data = writable<T | undefined>(value?.data, (set) => {
+    function update(entry: CacheEntry<T>) {
+      if (!value || entry.updated > value.updated) {
+        value = entry
+        set(entry.data)
+      }
+    }
+
+    runFetch().then(update)
+    const unsub_data = broadcaster.onData<T>(key, update)
+    const unsub_delete = broadcaster.onDelete(key, runFetch)
+
     return () => {
       unsub_data()
       unsub_delete()

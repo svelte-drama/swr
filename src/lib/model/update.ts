@@ -1,20 +1,17 @@
-import type { Broadcaster } from '$lib/broadcaster/types.js'
-import type { Cache } from '$lib/cache/types.js'
 import type { RequestPool } from '$lib/request-pool.js'
+import type { Internals } from './internals.js'
 
 type UpdateParams = {
-  broadcaster: Broadcaster
-  cache: Cache
   key: string
   request_pool: RequestPool
+  saveToCache: Internals['saveToCache']
 }
 export async function update<T>(
-  { broadcaster, cache, key, request_pool }: UpdateParams,
+  { key, request_pool, saveToCache }: UpdateParams,
   data: T
 ): Promise<T> {
   return request_pool.append(key, async () => {
-    const entry = await cache.set(key, data)
-    broadcaster.dispatch(key, entry)
+    await saveToCache(key, data)
     return data
   })
 }

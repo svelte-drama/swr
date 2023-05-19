@@ -5,7 +5,7 @@ export type Broadcaster = {
   dispatchDelete(key: string): void
   dispatchError(key: string, error: unknown): void
   onAllData(
-    fn: (message: (BroadcastData | BroadcastDelete), foreign: boolean) => void
+    fn: (message: BroadcastData | BroadcastDelete, foreign: boolean) => void
   ): () => void
   onData<T>(key: string, fn: (data: CacheEntry<T>) => void): () => void
   onDelete(key: string, fn: () => void): () => void

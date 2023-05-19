@@ -23,7 +23,10 @@ export function Broadcaster(
   version: ModelVersion
 ): Broadcaster {
   // Data events are propagated across tabs
-  const data_events = SWRBroadcastChannel<BroadcastDelete | BroadcastData>(partition, version)
+  const data_events = SWRBroadcastChannel<BroadcastDelete | BroadcastData>(
+    partition,
+    version
+  )
   // Error events are only emitted for the current tab
   const error_events = SWREventTarget<BroadcastError>()
 
@@ -50,7 +53,7 @@ export function Broadcaster(
         error,
         key,
         source: SOURCE,
-        type: 'error'
+        type: 'error',
       }
       error_events.dispatch(message)
     },
@@ -67,7 +70,7 @@ export function Broadcaster(
       })
     },
     onDelete(key: string, fn: () => void) {
-      return data_events.subscribe(message => {
+      return data_events.subscribe((message) => {
         if (message.type === 'delete' && key === message.key) {
           fn()
         }

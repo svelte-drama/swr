@@ -1,7 +1,7 @@
 import type { Broadcaster } from '$lib/broadcaster/types.js'
-import type { Cache, CacheEntry } from './types.js'
+import type { MemoryCache, CacheEntry } from './types.js'
 
-export function MemoryCache(broadcaster: Broadcaster): Cache {
+export function MemoryCache(broadcaster: Broadcaster): MemoryCache {
   const cache = new Map<string, CacheEntry>()
 
   broadcaster.onAllData((message, foreign) => {
@@ -15,22 +15,17 @@ export function MemoryCache(broadcaster: Broadcaster): Cache {
   })
 
   return {
-    async clear() {
+    clear() {
       cache.clear()
     },
-    async delete(key) {
+    delete(key) {
       cache.delete(key)
     },
-    async get<T>(key: string) {
+    get<T>(key: string) {
       return cache.get(key) as CacheEntry<T> | undefined
     },
-    async set<T>(key: string, data: T) {
-      const entry: CacheEntry<T> = {
-        data,
-        updated: Date.now(),
-      }
+    set(key, entry) {
       cache.set(key, entry)
-      return entry
     },
   }
 }

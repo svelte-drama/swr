@@ -60,12 +60,14 @@ export function model<ID, T>(
   return {
     async delete(params: ID) {
       const key = createKey(params)
-      await internals.cache.delete(key)
+      await internals.db.delete(key)
+      internals.memory.delete(key)
       internals.broadcaster.dispatchDelete(key)
     },
-    fetch(params: ID) {
+    async fetch(params: ID) {
       const options = getOptions(params)
-      return fetch<T>(options)
+      const entry = await fetch<T>(options)
+      return entry.data
     },
     live(params?: ID, suspend?: SuspenseFn) {
       // If createKey.length is zero, then there are no required params
@@ -73,7 +75,8 @@ export function model<ID, T>(
         return readable<undefined>()
       }
       const options = getOptions(params!)
-      return live<T>(options, suspend)
+      const runFetch = () => fetch(options)
+      return live<T>(options, runFetch, suspend)
     },
     refresh(params: ID) {
       const options = getOptions(params)

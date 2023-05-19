@@ -1,43 +1,57 @@
 import type { Broadcaster } from '$lib/broadcaster/types.js'
-import type { Cache, CacheEntry } from '$lib/cache/types.js'
+import type {
+  MemoryCache,
+  CacheEntry,
+  IndexedDBCache,
+} from '$lib/cache/types.js'
 import type { RequestPool } from '$lib/request-pool.js'
+import type { Internals } from './internals.js'
 
 const APP_START_TIME = Date.now()
 
 type FetchParams<T> = {
+  db: IndexedDBCache
   broadcaster: Broadcaster
-  cache: Cache
   fetcher(): Promise<T>
   key: string
   maxAge: number
+  memory: MemoryCache
   request_pool: RequestPool
+  saveToCache: Internals['saveToCache']
 }
 export async function fetch<T>({
+  db,
   broadcaster,
-  cache,
   fetcher,
   key,
   maxAge,
+  memory,
   request_pool,
-}: FetchParams<T>): Promise<T> {
-  const entry = await cache.get<T>(key)
-  if (isCurrent(entry, maxAge)) {
-    return entry.data
+  saveToCache,
+}: FetchParams<T>): Promise<CacheEntry<T>> {
+  const from_memory = memory.get<T>(key)
+  if (isCurrent(from_memory, maxAge)) {
+    return from_memory
+  }
+
+  const from_db = await db.get<T>(key)
+  if (isCurrent(from_db, maxAge)) {
+    memory.set(key, from_db)
+    broadcaster.dispatch(key, from_db)
+    return from_db
   }
 
   return request_pool.request(key, async () => {
     // Check cache again after achieving lock
-    const entry = await cache.get<T>(key)
+    const entry = memory.get<T>(key)
     if (isCurrent(entry, maxAge)) {
-      return entry.data
+      return entry
     }
 
     // Fetch new data
     try {
       const data = await fetcher()
-      const cache_entry = await cache.set(key, data)
-      broadcaster.dispatch(key, cache_entry)
-      return data
+      return saveToCache(key, data)
     } catch (e) {
       broadcaster.dispatchError(key, e)
       throw e

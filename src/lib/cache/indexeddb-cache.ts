@@ -1,9 +1,7 @@
-import type { Broadcaster } from '$lib/broadcaster/types.js'
 import { SEPARATOR, SWR_VERSION } from '$lib/constants.js'
 import type { ModelVersion, Partition } from '$lib/types.js'
 import { getOrSet } from '$lib/util/get-or-set.js'
-import { MemoryCache } from './memory-cache.js'
-import type { Cache, CacheEntry } from './types.js'
+import type { CacheEntry, IndexedDBCache } from './types.js'
 
 const DB_CONNECTIONS = new Map<Partition, Promise<IDBDatabase>>()
 const STORE_NAME = 'cache'
@@ -14,25 +12,21 @@ export async function clearDatabaseParition(partition: Partition) {
 }
 
 export function IndexedDBCache({
-  broadcaster,
   partition,
   version,
 }: {
-  broadcaster: Broadcaster
   partition: Partition
   version: ModelVersion
-}): Cache {
-  const cache = typeof indexedDB === 'undefined'
-    ? MemoryCache(broadcaster)
-    : CreateIndexedDBCache(partition, version).catch((e) => {
-      console.error(e)
-      return MemoryCache(broadcaster)
-    })
+}): IndexedDBCache {
+  const cache =
+    typeof indexedDB === 'undefined'
+      ? mockCache
+      : CreateIndexedDBCache(partition, version).catch((e) => {
+          console.error(e)
+          return mockCache
+        })
 
   return {
-    async clear() {
-      return (await cache).clear?.()
-    },
     async delete(key) {
       return (await cache).delete(key)
     },
@@ -45,10 +39,18 @@ export function IndexedDBCache({
   }
 }
 
+const mockCache: IndexedDBCache = {
+  async delete() {},
+  async get() {
+    return undefined
+  },
+  async set() {},
+}
+
 async function CreateIndexedDBCache(
   partition: Partition,
   version: ModelVersion
-): Promise<Cache> {
+): Promise<IndexedDBCache> {
   // Open database connection
   const db = await getOrSet(DB_CONNECTIONS, partition, async () => {
     return openDatabase(partition).then(removeOldRecords)
@@ -71,16 +73,11 @@ async function CreateIndexedDBCache(
         return store.get(db_key)
       })
     },
-    async set<T>(key: string, data: T): Promise<CacheEntry<T>> {
-      const entry: CacheEntry<T> = {
-        data,
-        updated: Date.now(),
-      }
+    async set(key, entry) {
       await makeRequest(db, 'readwrite', (store) => {
         const db_key = getKey(key)
         return store.put(entry, db_key)
       })
-      return entry
     },
   }
 }
