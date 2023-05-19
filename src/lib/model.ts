@@ -68,10 +68,10 @@ export function model<ID, T>(
       return fetch<T>(options)
     },
     live(params?: ID, suspend?: SuspenseFn) {
+      // If createKey.length is zero, then there are no required params
       if (createKey.length && params === undefined) {
         return readable<undefined>()
       }
-      // If createKey.length is zero, then there are no required params
       const options = getOptions(params!)
       return live<T>(options, suspend)
     },

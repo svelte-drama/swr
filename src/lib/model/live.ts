@@ -2,8 +2,7 @@ import type { Broadcaster } from '$lib/broadcaster/types.js'
 import type { Cache } from '$lib/cache/types.js'
 import type { RequestPool } from '$lib/request-pool.js'
 import type { SuspenseFn } from '$lib/types.js'
-import { isCurrent } from './fetch.js'
-import { refresh } from './refresh.js'
+import { fetch } from './fetch.js'
 import { writable, type Readable } from 'svelte/store'
 
 type LiveParams<T> = {
@@ -18,25 +17,21 @@ export function live<T>(
   { broadcaster, cache, fetcher, key, maxAge, request_pool }: LiveParams<T>,
   suspend?: SuspenseFn
 ): Readable<T | undefined> {
-  const refreshData = () => refresh({
+  const runFetch = () => fetch({
     broadcaster,
     cache,
     fetcher,
     key,
+    maxAge,
     request_pool,
   })
   const data = writable<T | undefined>(undefined, (set) => {
-    cache.get<T>(key).then((entry) => {
-      set(entry?.data)
-      if (!isCurrent(entry, maxAge)) {
-        refreshData()
-      }
-    })
+    runFetch().then(set)
     const unsub_data = broadcaster.onData<T>(key, (object) => {
       set(object.data)
     })
     const unsub_delete = broadcaster.onDelete(key, () => {
-      refreshData()
+      runFetch()
     })
     return () => {
       unsub_data()
