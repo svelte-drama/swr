@@ -24,15 +24,15 @@ export function live<T>(
     }
 
     runFetch().then(update)
-    return broadcaster.onKey<T>(key, event => {
+    return broadcaster.onKey<T>(key, (event) => {
       switch (event.type) {
-        case "clear":
-        case "delete": {
+        case 'clear':
+        case 'delete': {
           runFetch()
           break
         }
-        
-        case "data": {
+
+        case 'data': {
           update(event.data)
           break
         }
@@ -41,14 +41,14 @@ export function live<T>(
   })
 
   const error = readable<Error | undefined>(undefined, (set) => {
-    return broadcaster.onKey<T>(key, event => {
+    return broadcaster.onKey<T>(key, (event) => {
       switch (event.type) {
-        case "data": {
+        case 'data': {
           set(undefined)
           break
         }
 
-        case "error": {
+        case 'error': {
           set(event.error as Error)
           break
         }

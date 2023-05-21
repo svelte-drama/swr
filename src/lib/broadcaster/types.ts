@@ -6,20 +6,19 @@ export type Broadcaster = {
   dispatchClear(): void
   dispatchDelete(key: string): void
   dispatchError(key: string, error: unknown): void
-  on<T>(
-    fn: (event: BroadcastEvent<T>) => void
-  ): () => void
-  onKey<T>(
-    key: string,
-    fn: (event: BroadcastEvent<T>) => void
-  ): () => void
+  on<T>(fn: (event: BroadcastEvent<T>) => void): () => void
+  onKey<T>(key: string, fn: (event: BroadcastEvent<T>) => void): () => void
 }
 export type BroadcastChannel = {
   dispatch(data: BroadcastEvent): void
   subscribe<T extends BroadcastEvent>(fn: (event: T) => void): () => void
 }
 
-export type BroadcastEvent<T = unknown> = ClearEvent | DataEvent<T> | DeleteEvent | ErrorEvent
+export type BroadcastEvent<T = unknown> =
+  | ClearEvent
+  | DataEvent<T>
+  | DeleteEvent
+  | ErrorEvent
 export type ClearEvent = {
   model?: ModelName
   type: 'clear'

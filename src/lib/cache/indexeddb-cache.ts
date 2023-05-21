@@ -39,8 +39,9 @@ const mockCache: IndexedDBCache = {
   async set() {},
 }
 
-async function CreateIndexedDBCache(model_name: ModelName): Promise<IndexedDBCache> {
-  // Open database connection
+async function CreateIndexedDBCache(
+  model_name: ModelName
+): Promise<IndexedDBCache> {
   const db = await openDatabase().then(removeOldRecords)
   const getKey = (key: string) => `${model_name}${SEPARATOR}${key}`
 
@@ -79,12 +80,13 @@ async function CreateIndexedDBCache(model_name: ModelName): Promise<IndexedDBCac
 
 export async function clearDatabase() {
   openDatabase()
-    .then(db => {
+    .then((db) => {
       return makeRequest(db, 'readwrite', (store) => {
         return store.clear()
-      })    
-    }, () => {
-      return null
+      })
+    })
+    .catch((e) => {
+      console.error(e)
     })
 }
 

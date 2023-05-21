@@ -5,9 +5,7 @@ export type RequestPool = {
   append<T>(key: string, fn: () => Promise<T>): Promise<T>
   request<T>(key: string, fn: () => Promise<T>): Promise<T>
 }
-export function RequestPool(
-  model_name: ModelName
-): RequestPool {
+export function RequestPool(model_name: ModelName): RequestPool {
   const pool = new Map<string, Promise<unknown>>()
 
   function set(key: string, request: Promise<unknown>) {

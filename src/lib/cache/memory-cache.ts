@@ -6,17 +6,20 @@ export function MemoryCache(broadcaster: Broadcaster): MemoryCache {
 
   broadcaster.on((event) => {
     switch (event.type) {
-      case "clear": {
+      case 'clear': {
         cache.clear()
         break
       }
 
-      case "data": {
-        cache.set(event.key, event.data)
+      case 'data': {
+        const entry = cache.get(event.key)
+        if (!entry || entry.updated < event.data.updated) {
+          cache.set(event.key, event.data)
+        }
         break
       }
 
-      case "delete": {
+      case 'delete': {
         cache.delete(event.key)
         break
       }

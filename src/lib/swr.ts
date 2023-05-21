@@ -12,14 +12,12 @@ import type {
   SuspenseFn,
 } from '$lib/types.js'
 
-export function swr<ID, T>(
-  options: {
-    fetcher: Fetcher<ID, T>
-    key(params: ID): string
-    maxAge?: number
-    name?: ModelName
-  }
-) {
+export function swr<ID, T>(options: {
+  fetcher: Fetcher<ID, T>
+  key(params: ID): string
+  maxAge?: number
+  name?: ModelName
+}) {
   const createKey = options.key
   const model_name = options.name ?? ''
   const internals = createInternals(model_name)
@@ -33,7 +31,7 @@ export function swr<ID, T>(
       ...internals,
       key,
       fetcher,
-      maxAge: options.maxAge ?? 0
+      maxAge: options.maxAge ?? 0,
     }
   }
 

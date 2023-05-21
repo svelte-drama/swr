@@ -61,9 +61,7 @@ function onChange(e: { currentTarget: HTMLTextAreaElement }) {
 </script>
 
 <p>
-  <button type="button" on:click={clear}>
-    Clear Cache
-  </button>
+  <button type="button" on:click={clear}> Clear Cache </button>
 </p>
 
 {#if $data}

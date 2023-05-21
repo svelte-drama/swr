@@ -4,8 +4,10 @@ import type {
   CacheEntry,
   IndexedDBCache,
 } from '$lib/cache/types.js'
+import type { Internals } from '$lib/model/internals.js'
 import type { RequestPool } from '$lib/request-pool.js'
-import type { Internals } from './internals.js'
+
+const APP_START_TIME = Date.now()
 
 type FetchParams<T> = {
   db: IndexedDBCache
@@ -17,7 +19,27 @@ type FetchParams<T> = {
   request_pool: RequestPool
   saveToCache: Internals['saveToCache']
 }
-export async function fetch<T>({
+export async function fetch<T>(params: FetchParams<T>): Promise<CacheEntry<T>> {
+  const entry = await fetchFromServer(params)
+  const { fetcher, key, memory, request_pool, saveToCache } = params
+
+  // Refresh data in the background if older than this tab
+  // This allows data to be refreshed if altered on a different device via Ctrl + R
+  if (entry.updated < APP_START_TIME) {
+    request_pool.request(key, async () => {
+      // Check cache again after achieving lock
+      const entry = memory.get<T>(key)
+      if (!entry || entry.updated < APP_START_TIME) {
+        const data = await fetcher()
+        await saveToCache(key, data)
+      }
+    })
+  }
+
+  return entry
+}
+
+export async function fetchFromServer<T>({
   db,
   broadcaster,
   fetcher,
@@ -60,8 +82,5 @@ export function isCurrent<T>(
   object: CacheEntry<T> | undefined,
   maxAge: number
 ): object is CacheEntry<T> {
-  return (
-    !!object &&
-    object.updated + maxAge > Date.now()
-  )
+  return !!object && object.updated + maxAge > Date.now()
 }

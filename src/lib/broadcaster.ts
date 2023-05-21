@@ -71,7 +71,7 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
     },
     on,
     onKey<T>(key: string, fn: (event: BroadcastEvent<T>) => void) {
-      return on<T>(event => {
+      return on<T>((event) => {
         if (event.type === 'clear' || event.key === key) {
           fn(event)
         }
@@ -87,14 +87,14 @@ const createBroadcaster = memoize(() => {
   const error_events = SWREventTarget()
   return {
     data_events,
-    error_events
+    error_events,
   }
 })
 
 export function dispatchClearAll() {
   const { data_events } = createBroadcaster()
   const event: ClearEvent = {
-    type: 'clear'
-  } 
+    type: 'clear',
+  }
   data_events.dispatch(event)
 }

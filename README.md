@@ -46,7 +46,7 @@ const model = swr<ID, MODEL>({
 
 - `name?: string = ''`
 
-  Segment the cache using this as a key.  Models with the same name share the same cache, so key collision must be kept in mind.
+  Segment the cache using this as a key. Models with the same name share the same cache, so key collision must be kept in mind.
 
 #### Methods
 
@@ -54,8 +54,8 @@ The returned object `model` has several functions for fetching data.
 
 - `model.clear() => Promise<void>`
 
-  Clear all data from this cache.  Note: Models with the same name share a cache.
-  
+  Clear all data from this cache. Note: Models with the same name share a cache.
+
 - `model.delete(id: ID) => Promise<void>`
 
   Delete item from cache.
