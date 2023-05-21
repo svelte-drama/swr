@@ -14,38 +14,12 @@ SWR makes use of [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/In
 
 ## Usage
 
-### SWR
+### swr
 
 ```ts
-import { SWR } from '@svelte-drama/swr
+import { swr } from '@svelte-drama/swr'
 
-const swr = SWR(options?)
-```
-
-Creates a new SWR instance.
-
-#### Options
-
-- `maxAge?: number`
-
-  The default maximum age in milliseconds for cached data. This can be overridden on a per model basis. The default is `0` which will cause all requests to revalidate data with the server. It is highly recommended to pick a maximum age for data that suits the needs of your application.
-
-- `partition?: string`
-
-  The partition key for cache segregation. Typically, this would be a user id so that data for different users is stored in different caches.
-
-### swr.clear
-
-```ts
-await swr.clear()
-```
-
-Clears all cached data for this partition.
-
-### swr.model
-
-```ts
-const model = swr.model<ID, MODEL>({
+const model = swr<ID, MODEL>({
   key(id: ID) {
     return `/api/endpoint/${id}`
   },
@@ -66,21 +40,25 @@ const model = swr.model<ID, MODEL>({
 
   A function to retrieve data from the server. It is passed `key`, the result of the `key` function and the same `id` passed to the `key` function.
 
-- `maxAge?: number`
+- `maxAge?: number = 0`
 
-  If the last cached value is older than `maxAge` in milliseconds, it will be refetched from the server in the background. Defaults to the `maxAge` value passed to `SWR`.
+  If the last cached value is older than `maxAge` in milliseconds, it will be refetched from the server in the background.
 
-- `version?: string`
+- `name?: string = ''`
 
-  Used to segment the cache, preventing saved data from previous schemas being used. Typically, this would be a date (`2023-05-15`) when the model schema was last updated.
+  Segment the cache using this as a key.  Models with the same name share the same cache, so key collision must be kept in mind.
 
 #### Methods
 
 The returned object `model` has several functions for fetching data.
 
+- `model.clear() => Promise<void>`
+
+  Clear all data from this cache.  Note: Models with the same name share a cache.
+  
 - `model.delete(id: ID) => Promise<void>`
 
-  Delete data from cache. Any `live` stores with subscribers will cause the data to refresh.
+  Delete item from cache.
 
 - `model.fetch(id: ID) => Promise<MODEL>`
 
@@ -92,15 +70,15 @@ The returned object `model` has several functions for fetching data.
 
   `id` may be undefined to allow for chaining inside of components. In a Svelte component, this will evaluate without errors:
 
-  ```
+  ```ts
   $: const parent = model.live(id)
   $: const child = model.live($parent?.foreign_key)
   ```
 
   If integrating with [@svelte-drama/suspense](https://www.npmjs.com/package/@svelte-drama/suspense), the result of `createSuspense` may be passed to register this store.
 
-  ```
-  import { createSuspense } from '$svelte-drama/suspense
+  ```ts
+  import { createSuspense } from '$svelte-drama/suspense'
   const suspend = createSuspense()
   const data = model.live(id, suspend)
   ```
@@ -113,3 +91,13 @@ The returned object `model` has several functions for fetching data.
   `model.update(id: ID, fn: (data: MODEL) => MaybePromise<MODEL>) => Promise<MODEL>`
 
   Update data in the cache.
+
+### clear
+
+```ts
+import { clear } from '@svelte-drama/swr'
+
+clear()
+```
+
+Remove all data from all caches.

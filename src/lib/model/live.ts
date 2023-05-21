@@ -1,7 +1,7 @@
 import type { Broadcaster } from '$lib/broadcaster/types.js'
 import type { CacheEntry, MemoryCache } from '$lib/cache/types.js'
 import type { SuspenseFn } from '$lib/types.js'
-import { writable, type Readable } from 'svelte/store'
+import { type Readable, readable } from 'svelte/store'
 
 type LiveParams<T> = {
   broadcaster: Broadcaster
@@ -14,7 +14,8 @@ export function live<T>(
   suspend?: SuspenseFn
 ): Readable<T | undefined> {
   let value = memory.get<T>(key)
-  const data = writable<T | undefined>(value?.data, (set) => {
+
+  const data = readable<T | undefined>(value?.data, (set) => {
     function update(entry: CacheEntry<T>) {
       if (!value || entry.updated > value.updated) {
         value = entry
@@ -23,29 +24,36 @@ export function live<T>(
     }
 
     runFetch().then(update)
-    const unsub_data = broadcaster.onData<T>(key, update)
-    const unsub_delete = broadcaster.onDelete(key, runFetch)
-
-    return () => {
-      unsub_data()
-      unsub_delete()
-    }
+    return broadcaster.onKey<T>(key, event => {
+      switch (event.type) {
+        case "clear":
+        case "delete": {
+          runFetch()
+          break
+        }
+        
+        case "data": {
+          update(event.data)
+          break
+        }
+      }
+    })
   })
-  const error = writable<Error | undefined>(undefined, (set) => {
-    const unsub_data = broadcaster.onData(key, () => {
-      set(undefined)
+
+  const error = readable<Error | undefined>(undefined, (set) => {
+    return broadcaster.onKey<T>(key, event => {
+      switch (event.type) {
+        case "data": {
+          set(undefined)
+          break
+        }
+
+        case "error": {
+          set(event.error as Error)
+          break
+        }
+      }
     })
-    const unsub_delete = broadcaster.onDelete(key, () => {
-      set(undefined)
-    })
-    const unsub_error = broadcaster.onError(key, (e) => {
-      set(e as Error | undefined)
-    })
-    return () => {
-      unsub_data()
-      unsub_delete()
-      unsub_error()
-    }
   })
 
   if (suspend) {

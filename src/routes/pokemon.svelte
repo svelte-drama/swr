@@ -1,4 +1,6 @@
 <script lang="ts" context="module">
+import { clear, swr } from '$lib/index.js'
+
 type Pokemon = {
   species: {
     name: string
@@ -11,11 +13,8 @@ type Pokemon = {
 // Simulate network delay
 const sleep = () => new Promise((resolve) => setTimeout(resolve, 500))
 
-const swr = SWR({
-  maxAge: 30 * 60 * 1000,
-  partition: 'user_id',
-})
-const Pokemon = swr.model({
+const maxAge = 30 * 60 * 1000
+const Pokemon = swr({
   key(id: number) {
     return `https://pokeapi.co/api/v2/pokemon/${id}/`
   },
@@ -24,9 +23,10 @@ const Pokemon = swr.model({
     await sleep()
     return response.json()
   },
-  version: '05-11-2023',
+  maxAge,
+  name: 'pokemon:05-11-2023',
 })
-const Note = swr.model({
+const Note = swr({
   key(name: string) {
     return `/api/notes/${name}`
   },
@@ -35,13 +35,13 @@ const Note = swr.model({
     await sleep()
     return data ?? ''
   },
-  version: '05-12-2023',
+  maxAge,
+  name: 'notes:05-12-2023',
 })
 </script>
 
 <script lang="ts">
 import { createSuspense } from '@svelte-drama/suspense'
-import { SWR } from '$lib/index.js'
 
 const suspend = createSuspense()
 
@@ -59,6 +59,12 @@ function onChange(e: { currentTarget: HTMLTextAreaElement }) {
   localStorage.setItem(`/api/notes/${name}`, value)
 }
 </script>
+
+<p>
+  <button type="button" on:click={clear}>
+    Clear Cache
+  </button>
+</p>
 
 {#if $data}
   <h1>{$data.species.name}</h1>

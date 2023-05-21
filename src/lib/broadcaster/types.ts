@@ -1,33 +1,43 @@
 import type { CacheEntry } from '$lib/cache/types.js'
+import type { ModelName } from '$lib/types.js'
 
 export type Broadcaster = {
   dispatch(key: string, data: CacheEntry): void
+  dispatchClear(): void
   dispatchDelete(key: string): void
   dispatchError(key: string, error: unknown): void
-  onAllData(
-    fn: (message: BroadcastData | BroadcastDelete, foreign: boolean) => void
+  on<T>(
+    fn: (event: BroadcastEvent<T>) => void
   ): () => void
-  onData<T>(key: string, fn: (data: CacheEntry<T>) => void): () => void
-  onDelete(key: string, fn: () => void): () => void
-  onError(key: string, fn: (error: unknown) => void): () => void
+  onKey<T>(
+    key: string,
+    fn: (event: BroadcastEvent<T>) => void
+  ): () => void
 }
-export type BroadcastChannel<T> = {
-  dispatch: (data: T) => void
-  subscribe: (fn: (data: T) => void) => () => void
+export type BroadcastChannel = {
+  dispatch(data: BroadcastEvent): void
+  subscribe<T extends BroadcastEvent>(fn: (event: T) => void): () => void
 }
 
-export type BroadcastMessage = {
-  key: string
-  source: string
+export type BroadcastEvent<T = unknown> = ClearEvent | DataEvent<T> | DeleteEvent | ErrorEvent
+export type ClearEvent = {
+  model?: ModelName
+  type: 'clear'
 }
-export type BroadcastData<T = unknown> = BroadcastMessage & {
+export type DataEvent<T = unknown> = {
   data: CacheEntry<T>
+  key: string
+  model: ModelName
   type: 'data'
 }
-export type BroadcastDelete = BroadcastMessage & {
+export type DeleteEvent = {
+  key: string
+  model: ModelName
   type: 'delete'
 }
-export type BroadcastError = BroadcastMessage & {
+export type ErrorEvent = {
   error: unknown
+  key: string
+  model: ModelName
   type: 'error'
 }

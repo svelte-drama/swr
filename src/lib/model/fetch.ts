@@ -34,7 +34,6 @@ export async function fetch<T>({
 
   const from_db = await db.get<T>(key)
   if (isCurrent(from_db, maxAge)) {
-    memory.set(key, from_db)
     broadcaster.dispatch(key, from_db)
     return from_db
   }

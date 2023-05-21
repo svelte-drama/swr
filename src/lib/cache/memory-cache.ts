@@ -4,28 +4,28 @@ import type { MemoryCache, CacheEntry } from './types.js'
 export function MemoryCache(broadcaster: Broadcaster): MemoryCache {
   const cache = new Map<string, CacheEntry>()
 
-  broadcaster.onAllData((message, foreign) => {
-    if (foreign) {
-      if (message.type === 'data') {
-        cache.set(message.key, message.data)
-      } else if (message.type === 'delete') {
-        cache.delete(message.key)
+  broadcaster.on((event) => {
+    switch (event.type) {
+      case "clear": {
+        cache.clear()
+        break
+      }
+
+      case "data": {
+        cache.set(event.key, event.data)
+        break
+      }
+
+      case "delete": {
+        cache.delete(event.key)
+        break
       }
     }
   })
 
   return {
-    clear() {
-      cache.clear()
-    },
-    delete(key) {
-      cache.delete(key)
-    },
     get<T>(key: string) {
       return cache.get(key) as CacheEntry<T> | undefined
-    },
-    set(key, entry) {
-      cache.set(key, entry)
     },
   }
 }

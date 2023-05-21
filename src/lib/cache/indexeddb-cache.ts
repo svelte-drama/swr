@@ -1,32 +1,23 @@
 import { SEPARATOR, SWR_VERSION } from '$lib/constants.js'
-import type { ModelVersion, Partition } from '$lib/types.js'
-import { getOrSet } from '$lib/util/get-or-set.js'
+import type { ModelName } from '$lib/types.js'
+import { memoize } from '$lib/util/memoize.js'
 import type { CacheEntry, IndexedDBCache } from './types.js'
 
-const DB_CONNECTIONS = new Map<Partition, Promise<IDBDatabase>>()
 const STORE_NAME = 'cache'
 
-export async function clearDatabaseParition(partition: Partition) {
-  const db = await openDatabase(partition)
-  return makeRequest(db, 'readwrite', (store) => store.clear())
-}
-
-export function IndexedDBCache({
-  partition,
-  version,
-}: {
-  partition: Partition
-  version: ModelVersion
-}): IndexedDBCache {
+export function IndexedDBCache(model_name: ModelName): IndexedDBCache {
   const cache =
     typeof indexedDB === 'undefined'
       ? mockCache
-      : CreateIndexedDBCache(partition, version).catch((e) => {
+      : CreateIndexedDBCache(model_name).catch((e) => {
           console.error(e)
           return mockCache
         })
 
   return {
+    async clear() {
+      return (await cache).clear()
+    },
     async delete(key) {
       return (await cache).delete(key)
     },
@@ -40,6 +31,7 @@ export function IndexedDBCache({
 }
 
 const mockCache: IndexedDBCache = {
+  async clear() {},
   async delete() {},
   async get() {
     return undefined
@@ -47,20 +39,23 @@ const mockCache: IndexedDBCache = {
   async set() {},
 }
 
-async function CreateIndexedDBCache(
-  partition: Partition,
-  version: ModelVersion
-): Promise<IndexedDBCache> {
+async function CreateIndexedDBCache(model_name: ModelName): Promise<IndexedDBCache> {
   // Open database connection
-  const db = await getOrSet(DB_CONNECTIONS, partition, async () => {
-    return openDatabase(partition).then(removeOldRecords)
-  })
-
-  function getKey(key: string) {
-    return `${version}${SEPARATOR}${key}`
-  }
+  const db = await openDatabase().then(removeOldRecords)
+  const getKey = (key: string) => `${model_name}${SEPARATOR}${key}`
 
   return {
+    async clear() {
+      await makeRequest(db, 'readwrite', (store) => {
+        const start = getKey('')
+        const char_code = start.charCodeAt(start.length - 1)
+        const next_char = String.fromCharCode(char_code + 1)
+        const end = start.substring(0, start.length - 1) + next_char
+
+        const range = IDBKeyRange.bound(start, end, false, true)
+        return store.delete(range)
+      })
+    },
     async delete(key) {
       await makeRequest(db, 'readwrite', (store) => {
         const db_key = getKey(key)
@@ -82,6 +77,17 @@ async function CreateIndexedDBCache(
   }
 }
 
+export async function clearDatabase() {
+  openDatabase()
+    .then(db => {
+      return makeRequest(db, 'readwrite', (store) => {
+        return store.clear()
+      })    
+    }, () => {
+      return null
+    })
+}
+
 async function makeRequest<T>(
   db: IDBDatabase,
   access: 'readonly' | 'readwrite',
@@ -99,9 +105,9 @@ async function makeRequest<T>(
   })
 }
 
-function openDatabase(partition: Partition) {
+const openDatabase = memoize(() => {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open(`${SEPARATOR}${partition}`, SWR_VERSION)
+    const request = indexedDB.open(`swr`, SWR_VERSION)
     rejectOnError(request, reject)
     request.onsuccess = (e: Event) => {
       const target = e.target as IDBRequest<IDBDatabase>
@@ -115,7 +121,7 @@ function openDatabase(partition: Partition) {
       }
     }
   })
-}
+})
 
 function rejectOnError(request: IDBRequest, reject: (reason?: any) => void) {
   request.onerror = (e: Event) => {

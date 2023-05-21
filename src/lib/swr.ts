@@ -1,3 +1,4 @@
+import { readable } from 'svelte/store'
 import { atomicUpdate } from '$lib/model/atomic-update.js'
 import { fetch } from '$lib/model/fetch.js'
 import { createInternals } from '$lib/model/internals.js'
@@ -7,42 +8,32 @@ import { update as runUpdate } from '$lib/model/update.js'
 import type {
   Fetcher,
   MaybePromise,
-  ModelVersion,
-  Partition,
+  ModelName,
   SuspenseFn,
 } from '$lib/types.js'
-import { readable } from 'svelte/store'
 
-export type ModelParams<ID, T> = {
-  fetcher: Fetcher<ID, T>
-  key(params: ID): string
-  maxAge?: number
-  version?: ModelVersion
-}
-type ModelPrivateOptions = {
-  maxAge: number
-  partition: Partition
-}
-export function model<ID, T>(
-  model_options: ModelParams<ID, T>,
-  swr_options: ModelPrivateOptions
+export function swr<ID, T>(
+  options: {
+    fetcher: Fetcher<ID, T>
+    key(params: ID): string
+    maxAge?: number
+    name?: ModelName
+  }
 ) {
-  const createKey = model_options.key
-  const partition = swr_options.partition
-  const version = model_options.version ?? ''
-  const internals = createInternals(partition, version)
+  const createKey = options.key
+  const model_name = options.name ?? ''
+  const internals = createInternals(model_name)
 
   function getOptions(params: ID) {
     const key = createKey(params)
     const fetcher = async () => {
-      return model_options.fetcher(key, params)
+      return options.fetcher(key, params)
     }
     return {
-      ...swr_options,
-      ...model_options,
       ...internals,
       key,
       fetcher,
+      maxAge: options.maxAge ?? 0
     }
   }
 
@@ -58,10 +49,13 @@ export function model<ID, T>(
   }
 
   return {
+    async clear() {
+      await internals.db.clear()
+      internals.broadcaster.dispatchClear()
+    },
     async delete(params: ID) {
       const key = createKey(params)
       await internals.db.delete(key)
-      internals.memory.delete(key)
       internals.broadcaster.dispatchDelete(key)
     },
     async fetch(params: ID) {

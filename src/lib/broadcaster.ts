@@ -1,87 +1,100 @@
-import type { ModelVersion, Partition } from '$lib/types.js'
-import type { CacheEntry } from '$lib/cache/types.js'
 import { SWRBroadcastChannel } from '$lib/broadcaster/swr-broadcast-channel.js'
 import { SWREventTarget } from '$lib/broadcaster/swr-event-target.js'
 import type {
-  BroadcastData,
-  BroadcastDelete,
-  BroadcastError,
+  DataEvent,
+  DeleteEvent,
+  ErrorEvent,
   Broadcaster,
+  BroadcastEvent,
+  ClearEvent,
 } from '$lib/broadcaster/types.js'
+import type { ModelName } from '$lib/types.js'
+import { memoize } from '$lib/util/memoize.js'
 
-const SOURCE = (() => {
-  try {
-    return crypto.randomUUID()
-  } catch {
-    //
-    return ''
+export function Broadcaster(model_name: ModelName): Broadcaster {
+  const { data_events, error_events } = createBroadcaster()
+
+  function on<T>(fn: (event: BroadcastEvent<T>) => void) {
+    const data_unsub = data_events.subscribe<BroadcastEvent<T>>((event) => {
+      if (event.type === 'clear') {
+        if (event.model === undefined || event.model === model_name) {
+          fn(event)
+        }
+      } else if (model_name === event.model) {
+        fn(event)
+      }
+    })
+    const error_unsub = error_events.subscribe<ErrorEvent>((event) => {
+      if (event.model === model_name) {
+        fn(event)
+      }
+    })
+    return () => {
+      data_unsub()
+      error_unsub()
+    }
   }
-})()
-
-export function Broadcaster(
-  partition: Partition,
-  version: ModelVersion
-): Broadcaster {
-  // Data events are propagated across tabs
-  const data_events = SWRBroadcastChannel<BroadcastDelete | BroadcastData>(
-    partition,
-    version
-  )
-  // Error events are only emitted for the current tab
-  const error_events = SWREventTarget<BroadcastError>()
 
   return {
     dispatch(key, data) {
-      const message: BroadcastData = {
+      const message: DataEvent = {
         data,
         key,
+        model: model_name,
         type: 'data',
-        source: SOURCE,
+      }
+      data_events.dispatch(message)
+    },
+    dispatchClear() {
+      const message: ClearEvent = {
+        model: model_name,
+        type: 'clear',
       }
       data_events.dispatch(message)
     },
     dispatchDelete(key) {
-      const message: BroadcastDelete = {
+      const message: DeleteEvent = {
         key,
-        source: SOURCE,
+        model: model_name,
         type: 'delete',
       }
       data_events.dispatch(message)
     },
     dispatchError(key, error) {
-      const message: BroadcastError = {
+      const message: ErrorEvent = {
         error,
         key,
-        source: SOURCE,
+        model: model_name,
         type: 'error',
       }
       error_events.dispatch(message)
     },
-    onAllData(fn) {
-      return data_events.subscribe((message) => {
-        fn(message, message.source !== SOURCE)
-      })
-    },
-    onData<T>(key: string, fn: (data: CacheEntry<T>) => void) {
-      return data_events.subscribe((message) => {
-        if (message.type === 'data' && key === message.key) {
-          fn(message.data as CacheEntry<T>)
-        }
-      })
-    },
-    onDelete(key: string, fn: () => void) {
-      return data_events.subscribe((message) => {
-        if (message.type === 'delete' && key === message.key) {
-          fn()
-        }
-      })
-    },
-    onError(key, fn) {
-      return error_events.subscribe((message) => {
-        if (key === message.key) {
-          fn(message.error)
+    on,
+    onKey<T>(key: string, fn: (event: BroadcastEvent<T>) => void) {
+      return on<T>(event => {
+        if (event.type === 'clear' || event.key === key) {
+          fn(event)
         }
       })
     },
   }
+}
+
+const createBroadcaster = memoize(() => {
+  // Data events are propagated across tabs
+  const data_events = SWRBroadcastChannel()
+  // Error events are only emitted for the current tab
+  const error_events = SWREventTarget()
+  return {
+    data_events,
+    error_events
+  }
+})
+
+export function dispatchClearAll() {
+  const { data_events } = createBroadcaster()
+  const event: ClearEvent = {
+    type: 'clear'
+  } 
+  data_events.dispatch(event)
 }

@@ -9,7 +9,7 @@ import type {
   MemoryCache as MemoryCacheType,
 } from '$lib/cache/types.js'
 import { RequestPool } from '$lib/request-pool.js'
-import type { ModelVersion, Partition } from '$lib/types.js'
+import type { ModelName } from '$lib/types.js'
 import { getOrSet } from '$lib/util/get-or-set.js'
 
 export type Internals = {
@@ -19,45 +19,25 @@ export type Internals = {
   request_pool: RequestPool
   saveToCache<T>(key: string, data: T): Promise<CacheEntry<T>>
 }
-const internals_cache = new Map<Partition, Map<ModelVersion, Internals>>()
+const internals_cache = new Map<ModelName, Internals>()
 
-export function createInternals(partition: Partition, version: ModelVersion) {
-  const partition_internals = getPartitionCache(partition)
-  return getOrSet<ModelVersion, Internals>(partition_internals, version, () => {
-    const broadcaster = Broadcaster(partition, version)
-    const db = IndexedDBCache({
-      partition,
-      version,
-    })
+export function createInternals(model_name: ModelName) {
+  return getOrSet<ModelName, Internals>(internals_cache, model_name, () => {
+    const broadcaster = Broadcaster(model_name)
+    const db = IndexedDBCache(model_name)
     const memory = MemoryCache(broadcaster)
 
     return {
       broadcaster,
       db,
       memory,
-      request_pool: RequestPool(partition, version),
+      request_pool: RequestPool(model_name),
       async saveToCache<T>(key: string, data: T) {
         const cache_entry = createCacheEntry(data)
         await db.set(key, cache_entry)
-        memory.set(key, cache_entry)
         broadcaster.dispatch(key, cache_entry)
         return cache_entry
       },
     }
   })
-}
-
-export async function clearMemoryCachePartition(partition: Partition) {
-  const partition_internals = getPartitionCache(partition)
-  for (const internals of partition_internals.values()) {
-    internals.memory.clear?.()
-  }
-}
-
-function getPartitionCache(partition: Partition) {
-  return getOrSet<Partition, Map<ModelVersion, Internals>>(
-    internals_cache,
-    partition,
-    () => new Map()
-  )
 }

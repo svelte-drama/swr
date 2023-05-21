@@ -1,6 +1,6 @@
 import type { BroadcastChannel } from './types.js'
 
-export function SWREventTarget<T>(): BroadcastChannel<T> {
+export function SWREventTarget(): BroadcastChannel {
   const events = new EventTarget()
 
   return {
@@ -8,7 +8,7 @@ export function SWREventTarget<T>(): BroadcastChannel<T> {
       const event = new CustomEvent('message', { detail: data })
       events.dispatchEvent(event)
     },
-    subscribe(fn) {
+    subscribe<T>(fn: (event: T) => void) {
       const listener = ((e: CustomEvent<T>) => {
         fn(e.detail)
       }) as EventListener

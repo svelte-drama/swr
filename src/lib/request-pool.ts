@@ -1,13 +1,12 @@
 import { SEPARATOR, SWR_VERSION } from '$lib/constants.js'
-import type { ModelVersion, Partition } from '$lib/types.js'
+import type { ModelName } from '$lib/types.js'
 
 export type RequestPool = {
   append<T>(key: string, fn: () => Promise<T>): Promise<T>
   request<T>(key: string, fn: () => Promise<T>): Promise<T>
 }
 export function RequestPool(
-  partition: Partition,
-  version: ModelVersion
+  model_name: ModelName
 ): RequestPool {
   const pool = new Map<string, Promise<unknown>>()
 
@@ -23,7 +22,7 @@ export function RequestPool(
 
   return {
     append<T>(key: string, fn: () => Promise<T>) {
-      const make_request = () => acquireLock(partition, version, key, fn)
+      const make_request = () => acquireLock(model_name, key, fn)
       const previous = pool.get(key) ?? Promise.resolve()
       const request = previous.then(make_request, make_request)
 
@@ -35,7 +34,7 @@ export function RequestPool(
         return pool.get(key) as Promise<T>
       }
 
-      const request = acquireLock(partition, version, key, fn)
+      const request = acquireLock(model_name, key, fn)
       set(key, request)
       return request
     },
@@ -43,8 +42,7 @@ export function RequestPool(
 }
 
 function acquireLock<T>(
-  partition: Partition,
-  version: ModelVersion,
+  model_name: ModelName,
   key: string,
   fn: () => Promise<T>
 ) {
@@ -56,7 +54,7 @@ function acquireLock<T>(
 
   return new Promise<T>((resolve) => {
     navigator.locks.request(
-      `${SWR_VERSION}${SEPARATOR}${partition}${SEPARATOR}${version}${SEPARATOR}${key}`,
+      `${SWR_VERSION}${SEPARATOR}${model_name}${SEPARATOR}${key}`,
       async () => {
         const result = await fn()
         resolve(result)
