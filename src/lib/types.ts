@@ -1,10 +1,9 @@
 import type { Readable } from 'svelte/store'
-export type { SWROptions, SWRResult } from './_functions/swr.js'
 
-export type SWRPlugin = (arg: {
-  key: string
-  data: Readable<unknown>
-  error: Readable<Error | undefined>
-  last_update: Readable<number>
-  refresh: () => void
-}) => (() => void) | void
+export type SuspenseFn = <T>(
+  data: Readable<T | undefined>,
+  error: Readable<unknown>
+) => Readable<T | undefined>
+export type Fetcher<ID, T> = (key: string, params: ID) => MaybePromise<T>
+export type MaybePromise<T> = T | Promise<T>
+export type ModelName = string

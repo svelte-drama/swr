@@ -1,62 +1,46 @@
 {
-  "name": "@svelte-drama/swr",
-  "type": "module",
-  "description": "Keep your data on its toes",
-  "files": ["dist"],
-  "license": "0BSD",
+  "name": "www-swr",
+  "version": "1.0.0-rc.1",
   "packageManager": "pnpm@8.3.1",
-  "version": "0.3.0",
+  "scripts": {
+    "dev": "vite dev",
+    "package": "svelte-kit sync && svelte-package && publint",
+    "prepare": "husky install",
+    "prepublishOnly": "npm run package",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "format": "prettier --plugin-search-dir . --write ."
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./plugin": {
-      "types": "./dist/plugin.d.ts",
-      "default": "./dist/plugin.js"
-    },
-    "./types": {
-      "types": "./dist/types.d.ts",
-      "default": "./dist/types.js"
     }
   },
-  "scripts": {
-    "dev": "vite dev",
-    "build": "svelte-package",
-    "check": "svelte-check --fail-on-warnings --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
-    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
+  ],
+  "peerDependencies": {
+    "svelte": "^3.54.0"
   },
   "devDependencies": {
     "@svelte-drama/suspense": "^0.3.10",
-    "@sveltejs/adapter-auto": "2.0.1",
+    "@sveltejs/adapter-auto": "^2.0.1",
     "@sveltejs/kit": "^1.16.3",
     "@sveltejs/package": "^2.0.2",
-    "@typescript-eslint/eslint-plugin": "^5.59.5",
-    "@typescript-eslint/parser": "^5.59.5",
-    "eslint": "^8.40.0",
-    "eslint-config-prettier": "^8.8.0",
-    "eslint-plugin-svelte3": "^4.0.0",
+    "cross-spawn": "^7.0.3",
+    "husky": "^8.0.3",
     "prettier": "^2.8.8",
     "prettier-plugin-svelte": "^2.10.0",
+    "publint": "^0.1.11",
     "svelte": "^3.59.1",
     "svelte-check": "^3.3.2",
-    "svelte-preprocess": "^5.0.3",
+    "tslib": "^2.5.0",
     "typescript": "^5.0.4",
     "vite": "^4.3.5"
   },
-  "peerDependencies": {
-    "@svelte-drama/suspense": "^0.3.5",
-    "svelte": "^3.44.3"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/svelte-drama/swr"
-  },
-  "keywords": [
-    "cache",
-    "fetching",
-    "svelte",
-    "swr"
-  ]
+  "svelte": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module"
 }

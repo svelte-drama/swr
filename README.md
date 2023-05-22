@@ -1,174 +1,107 @@
-# SWR for Svelte
+# @svelte-suspense/swr
 
-This is a data management/fetching library written for Svelte, inspired by [SWR](https://swr.vercel.app/), and with built in integrations for [Suspense](https://www.npmjs.com/package/@svelte-drama/suspense). By keeping all requests in cache, views can be rendered instantly while refetching any potentially stale data in the background.
+This is a data management/fetching library written for Svelte, inspired by [SWR](https://swr.vercel.app/), and with built in integrations for Suspense. By keeping all requests in cache, views can be rendered instantly while refetching any potentially stale data in the background.
 
 [See it in action](https://pokemon-suspense-demo.vercel.app/)
 
-## Core Functions
+## Installation
+
+```bash
+npm install --save @svelte-suspense/swr
+```
+
+## Requirements
+
+SWR makes use of [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API), and [LockManager](https://developer.mozilla.org/en-US/docs/Web/API/LockManager) to coordinate communication. If these are are unavailable, an in memory fallback will be used but cache states will not be shared between tabs.
+
+## Usage
 
 ### swr
 
-```js
+```ts
 import { swr } from '@svelte-drama/swr'
 
-const key = '/my_url'
-const options = {
-  fetcher: (key) => fetch(key).then((r) => r.json()),
-  maxAge: undefined,
-  plugins: [],
-  updater: undefined,
-}
-const { data, error, refresh, update } = swr(key, options) // or "swr(key, options.fetcher)"
+const model = swr<ID, MODEL>({
+  key(id: ID) {
+    return `/api/endpoint/${id}`
+  },
+  async fetcher(key: string, id: ID) {
+    const request = fetch(key)
+    return request.json() as MODEL
+  },
+})
 ```
 
-#### Arguments
+`ID` may be of type `any`. `MODEL` must be an object that can be cloned via the [structured clone algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#supported_types).
 
-- `key`: `string | undefined`
+#### Options
 
-  A string value uniquely identifying this resource. Typically this will be the url fetched. This value will be passed to any supplied `fetcher` function.
+- `key(id: ID) => string`
 
-  If `key` is `undefined`, no data will be fetched and `swr` will immediately return.
+  A function to create a unique cache when given the user defined `id`. Typically, this is the API path this data would be fetched from.
 
-- `options.fetcher`: `async (key) => any`
+- `fetcher(key: string, id: ID) => MaybePromise<MODEL>`
 
-  Whenever data is refreshed, this function will be called. It must return a value other than `undefined` to indicate loading was successful.
+  A function to retrieve data from the server. It is passed `key`, the result of the `key` function and the same `id` passed to the `key` function.
 
-- `options.maxAge`: `number`
+- `maxAge?: number = 0`
 
-  If data in the cache is older than `maxAge` in milliseconds, a new request to refresh the data will be launched in the background. This check only occurs during initializtion. To do continous polling, see [refreshInterval](https://github.com/svelte-drama/swr#refreshInterval).
+  If the last cached value is older than `maxAge` in milliseconds, it will be refetched from the server in the background.
 
-- `options.plugins`: `SWRPlugin[]`
+- `name?: string = ''`
 
-  An array of plugins to provide additional behavior. See [Plugins](https://github.com/svelte-drama/swr#plugins).
+  Segment the cache using this as a key. Models with the same name share the same cache, so key collision must be kept in mind.
 
-- `options.updater`: `async (key, value) => any`
+#### Methods
 
-  If `updater` is defined, `swr` returns a writable store for data. Any changes to that store will be immediately persisted to cache and `updater` will be called to persist this data.
+The returned object `model` has several functions for fetching data.
 
-#### Returns
+- `model.clear() => Promise<void>`
 
-- `data`: `Readable | Writable`
+  Clear all data from this cache. Note: Models with the same name share a cache.
 
-  A Svelte store containing the results returned by `fetcher`. Data is not updated if `fetcher` throws an error. A writable store is returned only if `options.updater` is defined.
+- `model.delete(id: ID) => Promise<void>`
 
-- `error`: `Readable<Error | undefined>`
+  Delete item from cache.
 
-  A Svelte readable store containing an error if the most recent request to `fetcher` threw an error. `data` and `error` may both contain data if a request was successful and a later refresh encountered an error.
+- `model.fetch(id: ID) => Promise<MODEL>`
 
-- `fetch`: `Promise`
+  Returns data from cache if less than `maxAge` or performs a request using the provided `fetcher`
 
-  Returns data from the most recent request, or issues a new request if none has been cached.
+- `model.live(id?: ID, susepnd?: SuspenseFn) => Readable<MODEL | undefined>`
 
-- `processing`: `Readable<boolean>`
+  Returns a Svelte store that tracks the currently cached data. If no information is in the cache, the store will have the value `undefined` while data is requested. If the data in the cache is older than `maxAge`, a request to update data will be performed in the background and the store will automatically update.
 
-  A Svelte readable store indicating if is a request is currently in progress. Useful for showing background activity indicators.
+  `id` may be undefined to allow for chaining inside of components. In a Svelte component, this will evaluate without errors:
 
-- `refresh`: `async () => void`
+  ```ts
+  $: const parent = model.live(id)
+  $: const child = model.live($parent?.foreign_key)
+  ```
 
-  Force a new request to update the cache.
+  If integrating with [@svelte-drama/suspense](https://www.npmjs.com/package/@svelte-drama/suspense), the result of `createSuspense` may be passed to register this store.
 
-- `update`: `async (callback) => ReturnValue<typeof callback>`
+  ```ts
+  import { createSuspense } from '$svelte-drama/suspense'
+  const suspend = createSuspense()
+  const data = model.live(id, suspend)
+  ```
 
-  Manually update the cache at this key. `callback` will be called with the current value of the cache, which may be undefined if data has not finished loading.
+- `model.refresh(id: ID) => Promise<MODEL>`
 
-  This is most useful when performing optimistic updates or when receiving the results of an update from the server.
+  Performs a request using the provided `fetcher`. Always makes a request, regradless of current cache status.
+
+- `model.update(id: ID, data: MODEL) => Promise<MODEL>`  
+  `model.update(id: ID, fn: (data: MODEL) => MaybePromise<MODEL>) => Promise<MODEL>`
+
+  Update data in the cache.
 
 ### clear
 
-```js
+```ts
 import { clear } from '@svelte-drama/swr'
+
+clear()
 ```
 
-`clear()`
-Deletes all items from cache.
-
-`clear(key)`
-Delete a specific key from cache.
-
-### update
-
-```js
-import { update } from '@svelte-drama/swr'
-```
-
-Update the cache at a specific key. Most useful when preloading data or when data needs to be reloaded from the server.
-
-```js
-update(key)
-```
-
-Mark data as stale, triggering any relevant fetcher functions fetch new data.
-
-```js
-update(key, new_value)
-```
-
-Set the cached value.
-
-```js
-update(key, async (value) => {
-  return new_value
-})
-```
-
-The current value will be passed to the callback, which may be `undefined` if data has not been loaded for this key yet.
-
-## Plugins
-
-### refreshInterval
-
-```js
-import { swr } from '@svelte-drama/swr'
-import { refreshInterval } from '@svelte-drama/swr/plugin'
-
-const { data, error } = swr(key, {
-  plugins: [refreshInterval({ interval })],
-})
-```
-
-While a subscription to `data` or `error` exists, a request to refresh data will be made if data was last updated at least `interval` milliseconds ago and the current page is visible to the user.
-
-### refreshOnFocus
-
-```js
-import { swr } from '@svelte-drama/swr'
-import { refreshOnFocus } from '@svelte-drama/swr/plugin'
-
-const { data, error } = swr(key, {
-  plugins: [refreshOnFocus()],
-})
-
-const { data, error } = swr(key, {
-  plugins: [refreshOnFocus({ sameOrigin: true })],
-})
-```
-
-Treat data as stale if it was last updated prior to the most recent time this window gained focus.  If `sameOrigin` is set, data will be refreshed only if another tab running on the same origin was visited since the last time data was fetched.
-
-### refreshOnReconnect
-
-```js
-import { swr } from '@svelte-drama/swr'
-import { refreshOnReconnect } from '@svelte-drama/swr/plugin'
-
-const { data, error } = swr(key, {
-  plugins: [refreshOnReconnect()],
-})
-```
-
-Treat data as stale if it was last updated prior to the most recent ["online" event](https://developer.mozilla.org/en-US/docs/Web/API/Window/online_event).
-
-### suspend
-
-```js
-import { swr } from '@svelte-drama/swr'
-import { suspend } from '@svelte-drama/swr/plugin'
-
-const { data, error } = swr(key, {
-  plugins: [suspend()],
-})
-```
-
-Suspend rendering at the nearest `<Suspense>` boundary until `data` is no longer `undefined`. See [Suspense](https://github.com/svelte-drama/suspense) for more information.
-
-`suspend` must be called during component initialization.
+Remove all data from all caches.
