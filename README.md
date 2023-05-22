@@ -82,7 +82,7 @@ The returned object `model` has several functions for fetching data.
   If integrating with [@svelte-drama/suspense](https://www.npmjs.com/package/@svelte-drama/suspense), the result of `createSuspense` may be passed to register this store.
 
   ```ts
-  import { createSuspense } from '$svelte-drama/suspense'
+  import { createSuspense } from '@svelte-drama/suspense'
   const suspend = createSuspense()
   const data = model.live(id, suspend)
   ```
