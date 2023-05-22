@@ -24,7 +24,8 @@ export function live<T>(
     }
 
     runFetch().then(update)
-    return broadcaster.onKey<T>(key, (event) => {
+    window.addEventListener('online', runFetch)
+    const unsub = broadcaster.onKey<T>(key, (event) => {
       switch (event.type) {
         case 'clear':
         case 'delete': {
@@ -38,6 +39,11 @@ export function live<T>(
         }
       }
     })
+
+    return () => {
+      window.removeEventListener('online', runFetch)
+      unsub()
+    }
   })
 
   const error = readable<Error | undefined>(undefined, (set) => {
