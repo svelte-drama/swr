@@ -11,6 +11,8 @@ import type {
 import type { ModelName } from '$lib/types.js'
 import { memoize } from '$lib/util/memoize.js'
 
+const ORIGIN = `${Math.random().toString(36).substring(2, 11)}::${Date.now()}`
+
 export function Broadcaster(model_name: ModelName): Broadcaster {
   const { data_events, error_events } = createBroadcaster()
 
@@ -41,6 +43,7 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
         data,
         key,
         model: model_name,
+        origin: ORIGIN,
         type: 'data',
       }
       data_events.dispatch(message)
@@ -48,6 +51,7 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
     dispatchClear() {
       const message: ClearEvent = {
         model: model_name,
+        origin: ORIGIN,
         type: 'clear',
       }
       data_events.dispatch(message)
@@ -56,6 +60,7 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
       const message: DeleteEvent = {
         key,
         model: model_name,
+        origin: ORIGIN,
         type: 'delete',
       }
       data_events.dispatch(message)
@@ -65,6 +70,7 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
         error,
         key,
         model: model_name,
+        origin: ORIGIN,
         type: 'error',
       }
       error_events.dispatch(message)
@@ -94,7 +100,12 @@ const createBroadcaster = memoize(() => {
 export function dispatchClearAll() {
   const { data_events } = createBroadcaster()
   const event: ClearEvent = {
+    origin: ORIGIN,
     type: 'clear',
   }
   data_events.dispatch(event)
+}
+
+export function isEventSameOrigin(event: BroadcastEvent) {
+  return event.origin === ORIGIN
 }

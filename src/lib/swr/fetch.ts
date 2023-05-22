@@ -5,7 +5,6 @@ import type {
   IndexedDBCache,
 } from '$lib/cache/types.js'
 import type { RequestPool } from '$lib/request-pool.js'
-import type { Internals } from './internals.js'
 
 const APP_START_TIME = Date.now()
 
@@ -17,29 +16,9 @@ type FetchParams<T> = {
   maxAge: number
   memory: MemoryCache
   request_pool: RequestPool
-  saveToCache: Internals['saveToCache']
+  saveToCache: (data: T) => Promise<unknown>
 }
-export async function fetch<T>(params: FetchParams<T>): Promise<CacheEntry<T>> {
-  const entry = await fetchFromServer(params)
-  const { fetcher, key, memory, request_pool, saveToCache } = params
-
-  // Refresh data in the background if older than this tab
-  // This allows data to be refreshed if altered on a different device via Ctrl + R
-  if (entry.updated < APP_START_TIME) {
-    request_pool.request(key, async () => {
-      // Check cache again after achieving lock
-      const entry = memory.get<T>(key)
-      if (!entry || entry.updated < APP_START_TIME) {
-        const data = await fetcher()
-        await saveToCache(key, data)
-      }
-    })
-  }
-
-  return entry
-}
-
-export async function fetchFromServer<T>({
+export async function fetch<T>({
   db,
   broadcaster,
   fetcher,
@@ -48,29 +27,46 @@ export async function fetchFromServer<T>({
   memory,
   request_pool,
   saveToCache,
-}: FetchParams<T>): Promise<CacheEntry<T>> {
+}: FetchParams<T>): Promise<T> {
   const from_memory = memory.get<T>(key)
   if (isCurrent(from_memory, maxAge)) {
-    return from_memory
+    return from_memory.data
   }
 
-  const from_db = await db.get<T>(key)
-  if (isCurrent(from_db, maxAge)) {
-    broadcaster.dispatch(key, from_db)
-    return from_db
+  if (!from_memory) {
+    const from_db = await db.get<T>(key)
+    if (isCurrent(from_db, maxAge)) {
+      memory.set(key, from_db)
+
+      // Trust but verify any information set before the window was opened
+      // This ensures Ctrl + R will refresh data
+      request_pool.request<T>(key, async () => {
+        // Check cache again after achieving lock
+        const entry = memory.get<T>(key)
+        if (entry && entry.updated >= APP_START_TIME) {
+          return entry.data
+        }
+        const data = await fetcher()
+        await saveToCache(data)
+        return data
+      })
+
+      return from_db.data
+    }
   }
 
-  return request_pool.request(key, async () => {
+  return request_pool.request<T>(key, async () => {
     // Check cache again after achieving lock
     const entry = memory.get<T>(key)
     if (isCurrent(entry, maxAge)) {
-      return entry
+      return entry.data
     }
 
     // Fetch new data
     try {
       const data = await fetcher()
-      return saveToCache(key, data)
+      await saveToCache(data)
+      return data
     } catch (e) {
       broadcaster.dispatchError(key, e)
       throw e

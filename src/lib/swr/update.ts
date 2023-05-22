@@ -1,17 +1,16 @@
 import type { RequestPool } from '$lib/request-pool.js'
-import type { Internals } from './internals.js'
 
-type UpdateParams = {
+type UpdateParams<T> = {
   key: string
   request_pool: RequestPool
-  saveToCache: Internals['saveToCache']
+  saveToCache: (data: T) => Promise<unknown>
 }
 export async function update<T>(
-  { key, request_pool, saveToCache }: UpdateParams,
+  { key, request_pool, saveToCache }: UpdateParams<T>,
   data: T
 ): Promise<T> {
-  return request_pool.append(key, async () => {
-    await saveToCache(key, data)
+  return request_pool.append<T>(key, async () => {
+    await saveToCache(data)
     return data
   })
 }

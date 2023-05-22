@@ -1,10 +1,8 @@
 import { Broadcaster } from '$lib/broadcaster.js'
 import type { Broadcaster as BroadcasterType } from '$lib/broadcaster/types.js'
-import { createCacheEntry } from '$lib/cache/create-cache-entry.js'
 import { IndexedDBCache } from '$lib/cache/indexeddb-cache.js'
 import { MemoryCache } from '$lib/cache/memory-cache.js'
 import type {
-  CacheEntry,
   IndexedDBCache as IndexedDBCacheType,
   MemoryCache as MemoryCacheType,
 } from '$lib/cache/types.js'
@@ -17,7 +15,6 @@ export type Internals = {
   db: IndexedDBCacheType
   memory: MemoryCacheType
   request_pool: RequestPool
-  saveToCache<T>(key: string, data: T): Promise<CacheEntry<T>>
 }
 const internals_cache = new Map<ModelName, Internals>()
 
@@ -32,12 +29,6 @@ export function createInternals(model_name: ModelName) {
       db,
       memory,
       request_pool: RequestPool(model_name),
-      async saveToCache<T>(key: string, data: T) {
-        const cache_entry = createCacheEntry(data)
-        await db.set(key, cache_entry)
-        broadcaster.dispatch(key, cache_entry)
-        return cache_entry
-      },
     }
   })
 }

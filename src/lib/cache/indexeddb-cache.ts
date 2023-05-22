@@ -3,6 +3,7 @@ import type { ModelName } from '$lib/types.js'
 import { memoize } from '$lib/util/memoize.js'
 import type { CacheEntry, IndexedDBCache } from './types.js'
 
+const DATABASE_NAME = '$$swr'
 const STORE_NAME = 'cache'
 
 export function IndexedDBCache(model_name: ModelName): IndexedDBCache {
@@ -95,7 +96,9 @@ async function makeRequest<T>(
   access: 'readonly' | 'readwrite',
   fn: (store: IDBObjectStore) => IDBRequest<T>
 ) {
-  const transaction = db.transaction(STORE_NAME, access)
+  const transaction = db.transaction(STORE_NAME, access, {
+    durability: 'relaxed',
+  })
   const store = transaction.objectStore(STORE_NAME)
   return new Promise<T>((resolve, reject) => {
     const request = fn(store)
@@ -103,13 +106,14 @@ async function makeRequest<T>(
     request.onsuccess = (e) => {
       const target = e.target as IDBRequest
       resolve(target.result)
+      transaction.commit?.()
     }
   })
 }
 
 const openDatabase = memoize(() => {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open(`swr`, SWR_VERSION)
+    const request = indexedDB.open(DATABASE_NAME, SWR_VERSION)
     rejectOnError(request, reject)
     request.onsuccess = (e: Event) => {
       const target = e.target as IDBRequest<IDBDatabase>

@@ -1,13 +1,12 @@
 import type { Broadcaster } from '$lib/broadcaster/types.js'
 import type { RequestPool } from '$lib/request-pool.js'
-import type { Internals } from './internals.js'
 
 type RefreshParams<T> = {
   broadcaster: Broadcaster
   fetcher(): Promise<T>
   key: string
   request_pool: RequestPool
-  saveToCache: Internals['saveToCache']
+  saveToCache: (data: T) => Promise<unknown>
 }
 export function refresh<T>({
   broadcaster,
@@ -16,10 +15,10 @@ export function refresh<T>({
   request_pool,
   saveToCache,
 }: RefreshParams<T>): Promise<T> {
-  return request_pool.request(key, async () => {
+  return request_pool.request<T>(key, async () => {
     try {
       const data = await fetcher()
-      await saveToCache(key, data)
+      await saveToCache(data)
       return data
     } catch (e) {
       broadcaster.dispatchError(key, e)

@@ -21,22 +21,26 @@ export type BroadcastEvent<T = unknown> =
   | ErrorEvent
 export type ClearEvent = {
   model?: ModelName
+  origin: string
   type: 'clear'
 }
 export type DataEvent<T = unknown> = {
   data: CacheEntry<T>
   key: string
   model: ModelName
+  origin: string
   type: 'data'
 }
 export type DeleteEvent = {
   key: string
   model: ModelName
+  origin: string
   type: 'delete'
 }
 export type ErrorEvent = {
   error: unknown
   key: string
   model: ModelName
+  origin: string
   type: 'error'
 }

@@ -11,6 +11,7 @@ import type {
   ModelName,
   SuspenseFn,
 } from '$lib/types.js'
+import { createCacheEntry } from './cache/create-cache-entry.js'
 
 export function swr<ID, T>(options: {
   fetcher: Fetcher<ID, T>
@@ -27,11 +28,20 @@ export function swr<ID, T>(options: {
     const fetcher = async () => {
       return options.fetcher(key, params)
     }
+    const saveToCache = async (data: T) => {
+      const cache_entry = createCacheEntry(data)
+      internals.memory.set(key, cache_entry)
+      // Do not await writing to disk
+      internals.db.set(key, cache_entry)
+      return cache_entry
+    }
+
     return {
       ...internals,
       key,
       fetcher,
       maxAge: options.maxAge ?? 0,
+      saveToCache,
     }
   }
 
@@ -42,24 +52,23 @@ export function swr<ID, T>(options: {
     if (isFunction(data)) {
       return atomicUpdate<T>(options, data)
     } else {
-      return runUpdate<T>(options, data)
+      runUpdate<T>(options, data)
     }
   }
 
   return {
     async clear() {
       await internals.db.clear()
-      internals.broadcaster.dispatchClear()
+      internals.memory.clear()
     },
     async delete(params: ID) {
       const key = createKey(params)
       await internals.db.delete(key)
-      internals.broadcaster.dispatchDelete(key)
+      internals.memory.delete(key)
     },
     async fetch(params: ID) {
       const options = getOptions(params)
-      const entry = await fetch<T>(options)
-      return entry.data
+      return fetch<T>(options)
     },
     live(params?: ID, suspend?: SuspenseFn) {
       // If createKey.length is zero, then there are no required params
