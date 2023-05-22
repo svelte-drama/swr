@@ -2,6 +2,8 @@
 
 This is a data management/fetching library written for Svelte, inspired by [SWR](https://swr.vercel.app/), and with built in integrations for Suspense. By keeping all requests in cache, views can be rendered instantly while refetching any potentially stale data in the background.
 
+[See it in action](https://pokemon-suspense-demo.vercel.app/)
+
 ## Installation
 
 ```bash
@@ -29,6 +31,8 @@ const model = swr<ID, MODEL>({
   },
 })
 ```
+
+`ID` may be of type `any`. `MODEL` must be an object that can be cloned via the [structured clone algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#supported_types).
 
 #### Options
 

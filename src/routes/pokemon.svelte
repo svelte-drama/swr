@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-import { clear, swr } from '$lib/index.js'
+import { swr } from '$lib/index.js'
 
 type Pokemon = {
   species: {
@@ -59,10 +59,6 @@ function onChange(e: { currentTarget: HTMLTextAreaElement }) {
   localStorage.setItem(`/api/notes/${name}`, value)
 }
 </script>
-
-<p>
-  <button type="button" on:click={clear}> Clear Cache </button>
-</p>
 
 {#if $data}
   <h1>{$data.species.name}</h1>

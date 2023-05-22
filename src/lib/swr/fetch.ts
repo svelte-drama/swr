@@ -4,8 +4,8 @@ import type {
   CacheEntry,
   IndexedDBCache,
 } from '$lib/cache/types.js'
-import type { Internals } from '$lib/model/internals.js'
 import type { RequestPool } from '$lib/request-pool.js'
+import type { Internals } from './internals.js'
 
 const APP_START_TIME = Date.now()
 

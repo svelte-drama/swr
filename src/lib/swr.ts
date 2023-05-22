@@ -1,10 +1,10 @@
 import { readable } from 'svelte/store'
-import { atomicUpdate } from '$lib/model/atomic-update.js'
-import { fetch } from '$lib/model/fetch.js'
-import { createInternals } from '$lib/model/internals.js'
-import { live } from '$lib/model/live.js'
-import { refresh } from '$lib/model/refresh.js'
-import { update as runUpdate } from '$lib/model/update.js'
+import { atomicUpdate } from '$lib/swr/atomic-update.js'
+import { fetch } from '$lib/swr/fetch.js'
+import { createInternals } from '$lib/swr/internals.js'
+import { live } from '$lib/swr/live.js'
+import { refresh } from '$lib/swr/refresh.js'
+import { update as runUpdate } from '$lib/swr/update.js'
 import type {
   Fetcher,
   MaybePromise,
