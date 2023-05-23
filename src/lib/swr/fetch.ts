@@ -18,7 +18,36 @@ type FetchParams<T> = {
   request_pool: RequestPool
   saveToCache: (data: T) => Promise<CacheEntry<T>>
 }
-export async function fetch<T>({
+
+export async function fetch<T>(params: FetchParams<T>) {
+  const entry = await internalFetch(params)
+  if (entry.updated < APP_START_TIME) {
+    backgroundUpdate(params)
+  }
+  return entry
+}
+
+async function backgroundUpdate<T>({
+  fetcher,
+  key,
+  memory,
+  request_pool,
+  saveToCache,
+}: FetchParams<T>) {
+  // Trust but verify any information set before the window was opened
+  // This ensures Ctrl + R will refresh data
+  request_pool.append<T>(key, async () => {
+    // Check cache again after achieving lock
+    const entry = memory.get<T>(key)
+    if (entry && entry.updated >= APP_START_TIME) {
+      return entry
+    }
+    const data = await fetcher()
+    return saveToCache(data)
+  })
+}
+
+async function internalFetch<T>({
   db,
   broadcaster,
   fetcher,
@@ -35,22 +64,15 @@ export async function fetch<T>({
 
   if (!from_memory) {
     const from_db = await db.get<T>(key)
+    // Cache can be updated while accessing the database cache
     if (isCurrent(from_db, maxAge)) {
-      memory.set(key, from_db)
-
-      // Trust but verify any information set before the window was opened
-      // This ensures Ctrl + R will refresh data
-      request_pool.request<T>(key, async () => {
-        // Check cache again after achieving lock
-        const entry = memory.get<T>(key)
-        if (entry && entry.updated >= APP_START_TIME) {
-          return entry
-        }
-        const data = await fetcher()
-        return saveToCache(data)
-      })
-
-      return from_db
+      const from_memory = memory.get<T>(key)
+      if (!from_memory || from_db.updated > from_memory.updated) {
+        memory.set(key, from_db)
+        return from_db
+      } else {
+        return from_memory
+      }
     }
   }
 
