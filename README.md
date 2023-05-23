@@ -91,7 +91,7 @@ The returned object `model` has several functions for fetching data.
 
   Performs a request using the provided `fetcher`. Always makes a request, regradless of current cache status.
 
-- `model.update(id: ID, data: MODEL) => Promise<MODEL>`  
+- `model.update(id: ID, data: MODEL) => Model`  
   `model.update(id: ID, fn: (data: MODEL) => MaybePromise<MODEL>) => Promise<MODEL>`
 
   Update data in the cache.

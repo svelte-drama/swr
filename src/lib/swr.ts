@@ -36,17 +36,20 @@ export function swr<ID, T>(options: {
     }
   }
 
-  async function update(params: ID, data: T): Promise<T>
-  async function update(
+  function update(params: ID, data: T): T
+  function update(params: ID, fn: (data: T) => MaybePromise<T>): Promise<T>
+  function update(
     params: ID,
-    fn: (data: T) => MaybePromise<T>
-  ): Promise<T>
-  async function update(params: ID, data: T | ((data: T) => MaybePromise<T>)) {
+    data: T | ((data: T) => MaybePromise<T>)
+  ): Promise<T> | T {
     const options = getOptions(params)
-    const entry = isFunction(data)
-      ? atomicUpdate<T>(options, data)
-      : runUpdate<T>(options, data)
-    return (await entry).data
+    if (isFunction(data)) {
+      const request = atomicUpdate<T>(options, data)
+      return request.then((entry) => entry.data)
+    } else {
+      const entry = runUpdate<T>(options, data)
+      return entry.data
+    }
   }
 
   return {
