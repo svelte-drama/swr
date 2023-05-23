@@ -1,9 +1,16 @@
+import type { CacheEntry } from '$lib/cache/types.js'
 import { SEPARATOR, SWR_VERSION } from '$lib/constants.js'
 import type { ModelName } from '$lib/types.js'
 
 export type RequestPool = {
-  append<T>(key: string, fn: () => Promise<T>): Promise<T>
-  request<T>(key: string, fn: () => Promise<T>): Promise<T>
+  append<T>(
+    key: string,
+    fn: () => Promise<CacheEntry<T>>
+  ): Promise<CacheEntry<T>>
+  request<T>(
+    key: string,
+    fn: () => Promise<CacheEntry<T>>
+  ): Promise<CacheEntry<T>>
 }
 export function RequestPool(model_name: ModelName): RequestPool {
   const pool = new Map<string, Promise<unknown>>()

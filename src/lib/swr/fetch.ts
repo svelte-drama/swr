@@ -16,7 +16,7 @@ type FetchParams<T> = {
   maxAge: number
   memory: MemoryCache
   request_pool: RequestPool
-  saveToCache: (data: T) => Promise<unknown>
+  saveToCache: (data: T) => Promise<CacheEntry<T>>
 }
 export async function fetch<T>({
   db,
@@ -27,10 +27,10 @@ export async function fetch<T>({
   memory,
   request_pool,
   saveToCache,
-}: FetchParams<T>): Promise<T> {
+}: FetchParams<T>): Promise<CacheEntry<T>> {
   const from_memory = memory.get<T>(key)
   if (isCurrent(from_memory, maxAge)) {
-    return from_memory.data
+    return from_memory
   }
 
   if (!from_memory) {
@@ -44,14 +44,13 @@ export async function fetch<T>({
         // Check cache again after achieving lock
         const entry = memory.get<T>(key)
         if (entry && entry.updated >= APP_START_TIME) {
-          return entry.data
+          return entry
         }
         const data = await fetcher()
-        await saveToCache(data)
-        return data
+        return saveToCache(data)
       })
 
-      return from_db.data
+      return from_db
     }
   }
 
@@ -59,14 +58,13 @@ export async function fetch<T>({
     // Check cache again after achieving lock
     const entry = memory.get<T>(key)
     if (isCurrent(entry, maxAge)) {
-      return entry.data
+      return entry
     }
 
     // Fetch new data
     try {
       const data = await fetcher()
-      await saveToCache(data)
-      return data
+      return saveToCache(data)
     } catch (e) {
       broadcaster.dispatchError(key, e)
       throw e

@@ -45,15 +45,17 @@ export function swr<ID, T>(options: {
     }
   }
 
-  function update(params: ID, data: T): Promise<T>
-  function update(params: ID, fn: (data: T) => MaybePromise<T>): Promise<T>
-  function update(params: ID, data: T | ((data: T) => MaybePromise<T>)) {
+  async function update(params: ID, data: T): Promise<T>
+  async function update(
+    params: ID,
+    fn: (data: T) => MaybePromise<T>
+  ): Promise<T>
+  async function update(params: ID, data: T | ((data: T) => MaybePromise<T>)) {
     const options = getOptions(params)
-    if (isFunction(data)) {
-      return atomicUpdate<T>(options, data)
-    } else {
-      runUpdate<T>(options, data)
-    }
+    const entry = isFunction(data)
+      ? atomicUpdate<T>(options, data)
+      : runUpdate<T>(options, data)
+    return (await entry).data
   }
 
   return {
@@ -66,9 +68,10 @@ export function swr<ID, T>(options: {
       await internals.db.delete(key)
       internals.memory.delete(key)
     },
-    async fetch(params: ID) {
+    async fetch(params: ID): Promise<T> {
       const options = getOptions(params)
-      return fetch<T>(options)
+      const entry = await fetch<T>(options)
+      return entry.data
     },
     live(params?: ID, suspend?: SuspenseFn) {
       // If createKey.length is zero, then there are no required params
@@ -79,9 +82,10 @@ export function swr<ID, T>(options: {
       const runFetch = () => fetch(options)
       return live<T>(options, runFetch, suspend)
     },
-    refresh(params: ID) {
+    async refresh(params: ID): Promise<T> {
       const options = getOptions(params)
-      return refresh<T>(options)
+      const entry = await refresh<T>(options)
+      return entry.data
     },
     update,
   }
