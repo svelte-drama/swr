@@ -11,7 +11,6 @@ import type {
   ModelName,
   SuspenseFn,
 } from '$lib/types.js'
-import { createCacheEntry } from './cache/create-cache-entry.js'
 
 export function swr<ID, T>(options: {
   fetcher: Fetcher<ID, T>
@@ -28,20 +27,12 @@ export function swr<ID, T>(options: {
     const fetcher = async () => {
       return options.fetcher(key, params)
     }
-    const saveToCache = (data: T) => {
-      const cache_entry = createCacheEntry(data)
-      // Do not await writing to disk
-      internals.db.set(key, cache_entry)
-      internals.memory.set(key, cache_entry)
-      return cache_entry
-    }
 
     return {
       ...internals,
       key,
       fetcher,
       maxAge: options.maxAge ?? 0,
-      saveToCache,
     }
   }
 
@@ -60,13 +51,11 @@ export function swr<ID, T>(options: {
 
   return {
     async clear() {
-      await internals.db.clear()
-      internals.memory.clear()
+      internals.cache.clear()
     },
     async delete(params: ID) {
       const key = createKey(params)
-      await internals.db.delete(key)
-      internals.memory.delete(key)
+      internals.cache.delete(key)
     },
     async fetch(params: ID): Promise<T> {
       const options = getOptions(params)

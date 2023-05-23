@@ -1,44 +1,34 @@
-import type { Broadcaster } from '$lib/broadcaster/types.js'
-import type {
-  MemoryCache,
-  CacheEntry,
-  IndexedDBCache,
-} from '$lib/cache/types.js'
+import type { CacheEntry, SWRCache } from '$lib/cache/types.js'
 import type { RequestPool } from '$lib/request-pool.js'
 
 type FetchParams<T> = {
-  db: IndexedDBCache
-  broadcaster: Broadcaster
+  cache: SWRCache
   fetcher(): Promise<T>
   key: string
   maxAge: number
-  memory: MemoryCache
   request_pool: RequestPool
-  saveToCache: (data: T) => CacheEntry<T>
 }
 
 export async function fetch<T>({
-  db,
-  broadcaster,
+  cache,
   fetcher,
   key,
   maxAge,
-  memory,
   request_pool,
-  saveToCache,
 }: FetchParams<T>): Promise<CacheEntry<T>> {
-  const from_memory = memory.get<T>(key)
+  const from_memory = cache.memory.get<T>(key)
   if (isCurrent(from_memory, maxAge)) {
     return from_memory
   }
 
   if (!from_memory) {
-    const from_db = await db.get<T>(key)
+    const from_db = await cache.db.get<T>(key)
     // Cache can be updated while accessing the database cache
     if (isCurrent(from_db, maxAge)) {
-      const from_memory = memory.get<T>(key)
+      const from_memory = cache.memory.get<T>(key)
       if (!from_memory || from_db.updated > from_memory.updated) {
-        memory.set(key, from_db)
+        cache.memory.set(key, from_db)
+        cache.stores.set(key, from_db)
         return from_db
       } else {
         return from_memory
@@ -48,7 +38,7 @@ export async function fetch<T>({
 
   return request_pool.request<T>(key, async () => {
     // Check cache again after achieving lock
-    const entry = memory.get<T>(key)
+    const entry = cache.memory.get<T>(key)
     if (isCurrent(entry, maxAge)) {
       return entry
     }
@@ -56,9 +46,9 @@ export async function fetch<T>({
     // Fetch new data
     try {
       const data = await fetcher()
-      return saveToCache(data)
+      return cache.set(key, data)
     } catch (e) {
-      broadcaster.dispatchError(key, e)
+      cache.stores.setError(key, e)
       throw e
     }
   })

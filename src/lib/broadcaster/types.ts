@@ -5,7 +5,6 @@ export type Broadcaster = {
   dispatch(key: string, data: CacheEntry): void
   dispatchClear(): void
   dispatchDelete(key: string): void
-  dispatchError(key: string, error: unknown): void
   on<T>(fn: (event: BroadcastEvent<T>) => void): () => void
   onKey<T>(key: string, fn: (event: BroadcastEvent<T>) => void): () => void
 }
@@ -18,7 +17,6 @@ export type BroadcastEvent<T = unknown> =
   | ClearEvent
   | DataEvent<T>
   | DeleteEvent
-  | ErrorEvent
 export type ClearEvent = {
   model?: ModelName
   origin: string
@@ -36,11 +34,4 @@ export type DeleteEvent = {
   model: ModelName
   origin: string
   type: 'delete'
-}
-export type ErrorEvent = {
-  error: unknown
-  key: string
-  model: ModelName
-  origin: string
-  type: 'error'
 }

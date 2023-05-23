@@ -1,16 +1,16 @@
-import type { CacheEntry } from '$lib/cache/types.js'
+import type { CacheEntry, SWRCache } from '$lib/cache/types.js'
 import type { RequestPool } from '$lib/request-pool.js'
 
 type UpdateParams<T> = {
+  cache: SWRCache
   key: string
   request_pool: RequestPool
-  saveToCache: (data: T) => CacheEntry<T>
 }
 export async function update<T>(
-  { key, request_pool, saveToCache }: UpdateParams<T>,
+  { cache, key, request_pool }: UpdateParams<T>,
   data: T
 ): Promise<CacheEntry<T>> {
   return request_pool.append<T>(key, async () => {
-    return saveToCache(data)
+    return cache.set(key, data)
   })
 }

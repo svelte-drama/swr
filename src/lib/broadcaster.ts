@@ -3,7 +3,6 @@ import { SWREventTarget } from '$lib/broadcaster/swr-event-target.js'
 import type {
   DataEvent,
   DeleteEvent,
-  ErrorEvent,
   Broadcaster,
   BroadcastEvent,
   ClearEvent,
@@ -14,10 +13,10 @@ import { memoize } from '$lib/util/memoize.js'
 const ORIGIN = `${Math.random().toString(36).substring(2, 11)}::${Date.now()}`
 
 export function Broadcaster(model_name: ModelName): Broadcaster {
-  const { data_events, error_events } = createBroadcaster()
+  const broadcaster = createBroadcaster()
 
   function on<T>(fn: (event: BroadcastEvent<T>) => void) {
-    const data_unsub = data_events.subscribe<BroadcastEvent<T>>((event) => {
+    return broadcaster.subscribe<BroadcastEvent<T>>((event) => {
       if (event.type === 'clear') {
         if (event.model === undefined || event.model === model_name) {
           fn(event)
@@ -26,15 +25,6 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
         fn(event)
       }
     })
-    const error_unsub = error_events.subscribe<ErrorEvent>((event) => {
-      if (event.model === model_name) {
-        fn(event)
-      }
-    })
-    return () => {
-      data_unsub()
-      error_unsub()
-    }
   }
 
   return {
@@ -46,7 +36,7 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
         origin: ORIGIN,
         type: 'data',
       }
-      data_events.dispatch(message)
+      broadcaster.dispatch(message)
     },
     dispatchClear() {
       const message: ClearEvent = {
@@ -54,7 +44,7 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
         origin: ORIGIN,
         type: 'clear',
       }
-      data_events.dispatch(message)
+      broadcaster.dispatch(message)
     },
     dispatchDelete(key) {
       const message: DeleteEvent = {
@@ -63,17 +53,7 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
         origin: ORIGIN,
         type: 'delete',
       }
-      data_events.dispatch(message)
-    },
-    dispatchError(key, error) {
-      const message: ErrorEvent = {
-        error,
-        key,
-        model: model_name,
-        origin: ORIGIN,
-        type: 'error',
-      }
-      error_events.dispatch(message)
+      broadcaster.dispatch(message)
     },
     on,
     onKey<T>(key: string, fn: (event: BroadcastEvent<T>) => void) {
@@ -87,23 +67,18 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
 }
 
 const createBroadcaster = memoize(() => {
-  // Data events are propagated across tabs
-  const data_events = SWRBroadcastChannel()
-  // Error events are only emitted for the current tab
-  const error_events = SWREventTarget()
-  return {
-    data_events,
-    error_events,
-  }
+  return typeof BroadcastChannel === 'undefined'
+    ? SWREventTarget()
+    : SWRBroadcastChannel()
 })
 
 export function dispatchClearAll() {
-  const { data_events } = createBroadcaster()
+  const broadcaster = createBroadcaster()
   const event: ClearEvent = {
     origin: ORIGIN,
     type: 'clear',
   }
-  data_events.dispatch(event)
+  broadcaster.dispatch(event)
 }
 
 export function isEventSameOrigin(event: BroadcastEvent) {
