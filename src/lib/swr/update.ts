@@ -4,7 +4,7 @@ import type { RequestPool } from '$lib/request-pool.js'
 type UpdateParams<T> = {
   key: string
   request_pool: RequestPool
-  saveToCache: (data: T) => Promise<CacheEntry<T>>
+  saveToCache: (data: T) => CacheEntry<T>
 }
 export async function update<T>(
   { key, request_pool, saveToCache }: UpdateParams<T>,

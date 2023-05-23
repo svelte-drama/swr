@@ -28,11 +28,11 @@ export function swr<ID, T>(options: {
     const fetcher = async () => {
       return options.fetcher(key, params)
     }
-    const saveToCache = async (data: T) => {
+    const saveToCache = (data: T) => {
       const cache_entry = createCacheEntry(data)
-      internals.memory.set(key, cache_entry)
       // Do not await writing to disk
       internals.db.set(key, cache_entry)
+      internals.memory.set(key, cache_entry)
       return cache_entry
     }
 

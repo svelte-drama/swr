@@ -16,7 +16,7 @@ type FetchParams<T> = {
   maxAge: number
   memory: MemoryCache
   request_pool: RequestPool
-  saveToCache: (data: T) => Promise<CacheEntry<T>>
+  saveToCache: (data: T) => CacheEntry<T>
 }
 
 export async function fetch<T>(params: FetchParams<T>) {

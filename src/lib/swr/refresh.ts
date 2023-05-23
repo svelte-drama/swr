@@ -7,7 +7,7 @@ type RefreshParams<T> = {
   fetcher(): Promise<T>
   key: string
   request_pool: RequestPool
-  saveToCache: (data: T) => Promise<CacheEntry<T>>
+  saveToCache: (data: T) => CacheEntry<T>
 }
 export function refresh<T>({
   broadcaster,
