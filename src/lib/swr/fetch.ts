@@ -6,8 +6,6 @@ import type {
 } from '$lib/cache/types.js'
 import type { RequestPool } from '$lib/request-pool.js'
 
-const APP_START_TIME = Date.now()
-
 type FetchParams<T> = {
   db: IndexedDBCache
   broadcaster: Broadcaster
@@ -19,35 +17,7 @@ type FetchParams<T> = {
   saveToCache: (data: T) => CacheEntry<T>
 }
 
-export async function fetch<T>(params: FetchParams<T>) {
-  const entry = await internalFetch(params)
-  if (entry.updated < APP_START_TIME) {
-    backgroundUpdate(params)
-  }
-  return entry
-}
-
-async function backgroundUpdate<T>({
-  fetcher,
-  key,
-  memory,
-  request_pool,
-  saveToCache,
-}: FetchParams<T>) {
-  // Trust but verify any information set before the window was opened
-  // This ensures Ctrl + R will refresh data
-  request_pool.append<T>(key, async () => {
-    // Check cache again after achieving lock
-    const entry = memory.get<T>(key)
-    if (entry && entry.updated >= APP_START_TIME) {
-      return entry
-    }
-    const data = await fetcher()
-    return saveToCache(data)
-  })
-}
-
-async function internalFetch<T>({
+export async function fetch<T>({
   db,
   broadcaster,
   fetcher,
@@ -98,5 +68,5 @@ export function isCurrent<T>(
   object: CacheEntry<T> | undefined,
   maxAge: number
 ): object is CacheEntry<T> {
-  return !!object && object.updated + maxAge > Date.now()
+  return !!object && object.updated + maxAge >= Date.now()
 }

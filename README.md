@@ -46,7 +46,7 @@ const model = swr<ID, MODEL>({
 
 - `maxAge?: number = 0`
 
-  If the last cached value is older than `maxAge` in milliseconds, it will be refetched from the server in the background.
+  Only use cached values that are no older than `maxAge` in milliseconds.
 
 - `name?: string = ''`
 
