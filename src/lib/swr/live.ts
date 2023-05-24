@@ -27,7 +27,7 @@ export function live<T>(
     if (data === undefined) runFetch()
     return data
   })
-  const error = derived([value], ([{ error }]) => error)
+  const error = derived([value], ([{ error }]) => error as Error | undefined)
 
   if (suspend) {
     return suspend<T>(data, error)
