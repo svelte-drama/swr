@@ -22,7 +22,7 @@ export type StoreCache = {
   delete(key: string): void
   get<T>(key: string): Readable<{
     data: T | undefined
-    error: unknown
+    error?: unknown
   }>
   set(key: string, entry: CacheEntry): void
   setError(key: string, error: unknown): void

@@ -1,15 +1,34 @@
 import { writable, type Readable, type Writable } from 'svelte/store'
-import type { MemoryCache, StoreCache } from './types.js'
 import { getOrSet } from '$lib/util/get-or-set.js'
+import type { IndexedDBCache, MemoryCache, StoreCache } from './types.js'
 
-export function StoreCache(memory: MemoryCache): StoreCache {
-  const cache = new Map<
-    string,
-    Writable<{
-      data: unknown
-      error?: unknown
-    }>
-  >()
+type Store<T = unknown> = {
+  data: T | undefined
+  error?: unknown
+}
+
+export function StoreCache(
+  memory: MemoryCache,
+  db: IndexedDBCache
+): StoreCache {
+  const cache = new Map<string, Writable<Store>>()
+
+  function createStore<T>(key: string) {
+    const entry = memory.get<T>(key)
+    const store = writable<Store<T>>({ data: entry?.data })
+    if (!entry) {
+      db.get<T>(key).then((db_entry) => {
+        if (!db_entry) return
+
+        const entry = memory.get<T>(key)
+        if (!entry || db_entry.updated > entry.updated) {
+          memory.set(key, db_entry)
+          store.set({ data: db_entry.data })
+        }
+      })
+    }
+    return store
+  }
 
   return {
     clear() {
@@ -23,13 +42,9 @@ export function StoreCache(memory: MemoryCache): StoreCache {
       record?.set({ data: undefined })
     },
     get<T>(key: string) {
-      return getOrSet(cache, key, () => {
-        const entry = memory.get<T>(key)
-        return writable({ data: entry?.data })
-      }) as Readable<{
-        data: T | undefined
-        error: unknown
-      }>
+      return getOrSet(cache, key, () => createStore<T>(key)) as Readable<
+        Store<T>
+      >
     },
     set(key, entry) {
       const record = cache.get(key)
