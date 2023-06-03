@@ -1,28 +1,13 @@
 {
   "name": "@svelte-drama/swr",
-  "version": "1.0.0-rc.8",
-  "packageManager": "pnpm@8.3.1",
+  "version": "1.0.0-rc.9",
   "scripts": {
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "dev": "vite dev",
+    "format": "prettier --plugin-search-dir . --write .",
     "package": "svelte-kit sync && svelte-package && publint",
     "prepare": "husky install",
-    "prepublishOnly": "npm run package",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "format": "prettier --plugin-search-dir . --write ."
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
-  "files": [
-    "dist",
-    "!dist/**/*.test.*",
-    "!dist/**/*.spec.*"
-  ],
-  "peerDependencies": {
-    "svelte": "^3.54.0"
+    "prepublishOnly": "npm run package"
   },
   "devDependencies": {
     "@svelte-drama/suspense": "^0.3.10",
@@ -40,6 +25,24 @@
     "typescript": "^5.0.4",
     "vite": "^4.3.5"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*"
+  ],
+  "homepage": "https://github.com/svelte-drama/swr#readme",
+  "license": "0BSD",
+  "packageManager": "pnpm@8.3.1",
+  "peerDependencies": {
+    "svelte": "^3.54.0"
+  },
+  "repository": "github:svelte-drama/swr",
   "svelte": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module"
