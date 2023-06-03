@@ -49,7 +49,12 @@ export async function fetch<T>({
       return cache.set(key, data)
     } catch (e) {
       cache.stores.setError(key, e)
-      throw e
+      const entry = await cache.db.get<T>(key)
+      if (entry) {
+        return entry
+      } else {
+        throw e
+      }
     }
   })
 }
