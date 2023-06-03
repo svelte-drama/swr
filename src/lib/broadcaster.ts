@@ -1,5 +1,6 @@
 import { SWRBroadcastChannel } from '$lib/broadcaster/swr-broadcast-channel.js'
 import { SWREventTarget } from '$lib/broadcaster/swr-event-target.js'
+import { SWRNoopEvents } from '$lib/broadcaster/swr-noop-events.js'
 import type {
   DataEvent,
   DeleteEvent,
@@ -67,9 +68,13 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
 }
 
 const createBroadcaster = memoize(() => {
-  return typeof BroadcastChannel === 'undefined'
-    ? SWREventTarget()
-    : SWRBroadcastChannel()
+  if (typeof window === 'undefined') {
+    return SWRNoopEvents
+  }
+  if (typeof BroadcastChannel === 'undefined') {
+    return SWREventTarget()
+  }
+  return SWRBroadcastChannel()
 })
 
 export function dispatchClearAll() {
