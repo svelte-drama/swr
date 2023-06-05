@@ -1,4 +1,5 @@
 import type { CacheEntry, SWRCache } from '$lib/cache/types.js'
+import { getLastRefresh } from '$lib/refresh.js'
 import type { RequestPool } from '$lib/request-pool.js'
 
 type FetchParams<T> = {
@@ -48,6 +49,7 @@ export async function fetch<T>({
       const data = await fetcher()
       return cache.set(key, data)
     } catch (e) {
+      console.error(e)
       cache.stores.setError(key, e)
       const entry = await cache.db.get<T>(key)
       if (entry) {
@@ -63,5 +65,9 @@ export function isCurrent<T>(
   object: CacheEntry<T> | undefined,
   maxAge: number
 ): object is CacheEntry<T> {
-  return !!object && object.updated + maxAge >= Date.now()
+  return (
+    !!object &&
+    object.updated + maxAge >= Date.now() &&
+    object.updated >= getLastRefresh()
+  )
 }

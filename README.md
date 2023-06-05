@@ -70,7 +70,7 @@ The returned object `model` has several functions for fetching data.
 
 - `model.live(id?: ID, susepnd?: SuspenseFn) => Readable<MODEL | undefined>`
 
-  Returns a Svelte store that tracks the currently cached data. If no information is in the cache, the store will have the value `undefined` while data is requested. If the data in the cache is older than `maxAge`, a request to update data will be performed in the background and the store will automatically update.
+  Returns a Svelte store that tracks the currently cached data. If no information is in the cache, the store will have the value `undefined` while data is requested. If the data in the cache is older than `maxAge`, stale data will be returned while a request to update data will be performed in the background.
 
   `id` may be undefined to allow for chaining inside of components. In a Svelte component, this will evaluate without errors:
 
