@@ -1,6 +1,4 @@
 import type { CacheEntry } from '$lib/cache/types.js'
-import { SEPARATOR, SWR_VERSION } from '$lib/constants.js'
-import type { ModelName } from '$lib/types.js'
 
 export type RequestPool = {
   append<T>(
@@ -12,7 +10,7 @@ export type RequestPool = {
     fn: () => Promise<CacheEntry<T>>
   ): Promise<CacheEntry<T>>
 }
-export function RequestPool(model_name: ModelName): RequestPool {
+export function RequestPool(): RequestPool {
   const pool = new Map<string, Promise<unknown>>()
 
   function set(key: string, request: Promise<unknown>) {
@@ -27,9 +25,8 @@ export function RequestPool(model_name: ModelName): RequestPool {
 
   return {
     append<T>(key: string, fn: () => Promise<T>) {
-      const make_request = () => acquireLock(model_name, key, fn)
       const previous = pool.get(key) ?? Promise.resolve()
-      const request = previous.then(make_request, make_request)
+      const request = previous.then(fn, fn)
 
       set(key, request)
       return request
@@ -39,31 +36,9 @@ export function RequestPool(model_name: ModelName): RequestPool {
         return pool.get(key) as Promise<T>
       }
 
-      const request = acquireLock(model_name, key, fn)
+      const request = fn()
       set(key, request)
       return request
     },
   }
-}
-
-function acquireLock<T>(
-  model_name: ModelName,
-  key: string,
-  fn: () => Promise<T>
-) {
-  if (typeof navigator === 'undefined' || !navigator.locks) {
-    // If navigator.locks is not supported, we just rely on the request
-    // pool to deduplicate requests from inside the same tab
-    return fn()
-  }
-
-  return new Promise<T>((resolve) => {
-    navigator.locks.request(
-      `${SWR_VERSION}${SEPARATOR}${model_name}${SEPARATOR}${key}`,
-      async () => {
-        const result = await fn()
-        resolve(result)
-      }
-    )
-  })
 }
