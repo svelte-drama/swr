@@ -12,7 +12,15 @@ npm install --save @svelte-suspense/swr
 
 ## Requirements
 
-SWR makes use of [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API), and [LockManager](https://developer.mozilla.org/en-US/docs/Web/API/LockManager) to coordinate communication. If these are are unavailable, an in memory fallback will be used but cache states will not be shared between tabs.
+SWR requires [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API) and [LockManager](https://developer.mozilla.org/en-US/docs/Web/API/LockManager).
+
+Full support for those interfaces is included natively in:
+
+- Chrome 69
+- Edge 79
+- FireFox 96
+- Opera 56
+- Safari 15.4
 
 ## Usage
 
@@ -91,7 +99,7 @@ The returned object `model` has several functions for fetching data.
 
   Performs a request using the provided `fetcher`. Always makes a request, regradless of current cache status.
 
-- `model.update(id: ID, data: MODEL) => Model`  
+- `model.update(id: ID, data: MODEL) => Promise<Model>`  
   `model.update(id: ID, fn: (data: MODEL) => MaybePromise<MODEL>) => Promise<MODEL>`
 
   Update data in the cache.
