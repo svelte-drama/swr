@@ -1,6 +1,6 @@
 {
   "name": "@svelte-drama/swr",
-  "version": "1.0.0-rc.9",
+  "version": "1.0.0-rc.10",
   "scripts": {
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "dev": "vite dev",
@@ -40,7 +40,7 @@
   "license": "0BSD",
   "packageManager": "pnpm@8.3.1",
   "peerDependencies": {
-    "svelte": "^3.54.0"
+    "svelte": "^3.54.0 || ^4.0.0"
   },
   "repository": "github:svelte-drama/swr",
   "svelte": "./dist/index.js",
