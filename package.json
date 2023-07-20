@@ -4,7 +4,7 @@
   "scripts": {
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "dev": "vite dev",
-    "format": "prettier --plugin-search-dir . --write .",
+    "format": "prettier . --write .",
     "package": "svelte-kit sync && svelte-package && publint",
     "prepare": "husky install",
     "prepublishOnly": "npm run package"

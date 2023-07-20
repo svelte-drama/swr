@@ -23,10 +23,6 @@ const files = changes
   .split('\n')
   .filter((filename) => EXTENSIONS.has(extname(filename)))
 if (files.length) {
-  await run(
-    'pnpx',
-    ['prettier', '--write', '--plugin-search-dir=.', ...files],
-    true
-  )
+  await run('pnpx', ['prettier', '--write', ...files], true)
   await run('git', ['add', ...files])
 }
