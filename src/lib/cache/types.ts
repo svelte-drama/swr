@@ -20,12 +20,12 @@ export type MemoryCache = {
 export type StoreCache = {
   clear(): void
   delete(key: string): void
-  get<T>(key: string): Readable<{
-    data: T | undefined
-    error?: unknown
-  }>
+  get<T>(key: string): {
+    data: Readable<T | undefined>
+    error: Readable<Error | undefined>
+  }
   set(key: string, entry: CacheEntry): void
-  setError(key: string, error: unknown): void
+  setError(key: string, error: Error): void
 }
 
 export type SWRCache = {

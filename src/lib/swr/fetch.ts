@@ -24,24 +24,30 @@ export async function fetch<T>({
     const entry = await lock(key, false, () => {
       return fromCache<T>({ cache, key, maxAge })
     })
-
     if (entry) return entry
 
     return lock(key, true, async () => {
       // Check cache again after achieving lock
-      const entry = cache.memory.get<T>(key)
-      if (isCurrent(entry, maxAge)) {
-        return entry
-      }
+      const entry = await fromCache<T>({ cache, key, maxAge })
+      if (entry) return entry
 
-      return fromServer({ cache, fetcher, key })
+      try {
+        return fromServer({ cache, fetcher, key })
+      } catch (e) {
+        const entry = await cache.db.get<T>(key)
+        if (entry) {
+          return entry
+        } else {
+          throw e
+        }
+      }
     })
   })
 }
 
 export function isCurrent<T>(
   object: CacheEntry<T> | undefined,
-  maxAge: number
+  maxAge: number,
 ): object is CacheEntry<T> {
   return (
     !!object &&
@@ -78,7 +84,7 @@ async function fromCache<T>({
   }
 }
 
-async function fromServer<T>({
+export async function fromServer<T>({
   cache,
   fetcher,
   key,
@@ -93,12 +99,7 @@ async function fromServer<T>({
     return cache.set(key, data)
   } catch (e) {
     console.error(e)
-    cache.stores.setError(key, e)
-    const entry = await cache.db.get<T>(key)
-    if (entry) {
-      return entry
-    } else {
-      throw e
-    }
+    cache.stores.setError(key, e as Error)
+    throw e
   }
 }

@@ -11,10 +11,10 @@ type LiveParams = {
 export function live<T>(
   { cache, key }: LiveParams,
   runFetch: () => Promise<unknown>,
-  suspend?: SuspenseFn
+  suspend?: SuspenseFn,
 ): Readable<T | undefined> {
-  const value = cache.stores.get<T>(key)
-  const observer = readable(undefined, (set) => {
+  const { data, error } = cache.stores.get<T>(key)
+  const observer = readable(undefined, () => {
     window.addEventListener('online', runFetch)
     runFetch()
 
@@ -23,14 +23,10 @@ export function live<T>(
     }
   })
 
-  const data = derived([value, observer], ([{ data }]) => {
+  const store = derived([data, observer], ([data]) => {
     if (data === undefined) runFetch()
     return data
   })
-  const error = derived([value], ([{ error }]) => error as Error | undefined)
 
-  if (suspend) {
-    return suspend<T>(data, error)
-  }
-  return data
+  return suspend ? suspend<T>(store, error) : store
 }
