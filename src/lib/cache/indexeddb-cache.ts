@@ -1,6 +1,5 @@
 import { SEPARATOR, SWR_VERSION } from '$lib/constants.js'
 import type { ModelName } from '$lib/types.js'
-import { memoize } from '$lib/util/memoize.js'
 import type { CacheEntry, IndexedDBCache } from './types.js'
 
 const DATABASE_NAME = '$$swr'
@@ -41,14 +40,14 @@ const mockCache: IndexedDBCache = {
 }
 
 async function CreateIndexedDBCache(
-  model_name: ModelName
+  model_name: ModelName,
 ): Promise<IndexedDBCache> {
-  const db = await openDatabase().then(removeOldRecords)
+  await openDatabase().then(removeOldRecords)
   const getKey = (key: string) => `${model_name}${SEPARATOR}${key}`
 
   return {
     async clear() {
-      await makeRequest(db, 'readwrite', (store) => {
+      await makeRequest('readwrite', (store) => {
         const start = getKey('')
         const char_code = start.charCodeAt(start.length - 1)
         const next_char = String.fromCharCode(char_code + 1)
@@ -59,19 +58,19 @@ async function CreateIndexedDBCache(
       })
     },
     async delete(key) {
-      await makeRequest(db, 'readwrite', (store) => {
+      await makeRequest('readwrite', (store) => {
         const db_key = getKey(key)
         return store.delete(db_key)
       })
     },
     async get(key) {
-      return makeRequest(db, 'readonly', (store) => {
+      return makeRequest('readonly', (store) => {
         const db_key = getKey(key)
         return store.get(db_key)
       })
     },
     async set(key, entry) {
-      await makeRequest(db, 'readwrite', (store) => {
+      await makeRequest('readwrite', (store) => {
         const db_key = getKey(key)
         return store.put(entry, db_key)
       })
@@ -80,22 +79,16 @@ async function CreateIndexedDBCache(
 }
 
 export async function clearDatabase() {
-  openDatabase()
-    .then((db) => {
-      return makeRequest(db, 'readwrite', (store) => {
-        return store.clear()
-      })
-    })
-    .catch((e) => {
-      console.error(e)
-    })
+  return makeRequest('readwrite', (store) => {
+    return store.clear()
+  })
 }
 
 async function makeRequest<T>(
-  db: IDBDatabase,
   access: 'readonly' | 'readwrite',
-  fn: (store: IDBObjectStore) => IDBRequest<T>
+  fn: (store: IDBObjectStore) => IDBRequest<T>,
 ) {
+  const db = await openDatabase()
   const transaction = db.transaction(STORE_NAME, access, {
     durability: 'relaxed',
   })
@@ -111,7 +104,7 @@ async function makeRequest<T>(
   })
 }
 
-const openDatabase = memoize(() => {
+const openDatabase = () => {
   return new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, SWR_VERSION)
     rejectOnError(request, reject)
@@ -127,7 +120,7 @@ const openDatabase = memoize(() => {
       }
     }
   })
-})
+}
 
 function rejectOnError(request: IDBRequest, reject: (reason?: any) => void) {
   request.onerror = (e: Event) => {
