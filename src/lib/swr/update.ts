@@ -8,9 +8,9 @@ type UpdateParams<T> = {
 }
 export function update<T>(
   { cache, key, lock }: UpdateParams<T>,
-  data: T
+  data: T,
 ): Promise<CacheEntry<T>> {
   return lock(key, true, () => {
-    return cache.set(key, data)
+    return cache.set(key, data, true)
   })
 }

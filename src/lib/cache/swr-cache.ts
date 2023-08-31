@@ -9,7 +9,7 @@ import type { SWRCache } from './types.js'
 
 export function SWRCache(
   model_name: ModelName,
-  broadcaster: Broadcaster
+  broadcaster: Broadcaster,
 ): SWRCache {
   const db = IndexedDBCache(model_name)
   const memory = MemoryCache()
@@ -66,11 +66,18 @@ export function SWRCache(
       stores.delete(key)
       broadcaster.dispatchDelete(key)
     },
-    async set<T>(key: string, data: T) {
+    async set<T>(key: string, data: T, force = false) {
       const entry = createCacheEntry<T>(data)
       await db.set(key, entry)
+
+      if (!force) {
+        const from_memory = memory.get(key)
+        if (!from_memory || data !== from_memory.data) {
+          stores.set(key, entry)
+        }
+      }
+
       memory.set(key, entry)
-      stores.set(key, entry)
       broadcaster.dispatch(key, entry)
       return entry
     },

@@ -95,7 +95,17 @@ export async function fromServer<T>({
 }) {
   // Fetch new data
   try {
-    const data = await fetcher()
+    let data = await fetcher()
+
+    // If data has not changed, reuse old object to reduce rerenders
+    const from_memory = cache.memory.get<T>(key)
+    if (
+      from_memory &&
+      JSON.stringify(from_memory.data) === JSON.stringify(data)
+    ) {
+      data = await from_memory.data
+    }
+
     return cache.set(key, data)
   } catch (e) {
     console.error(e)
