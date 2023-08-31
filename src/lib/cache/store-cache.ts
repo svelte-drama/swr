@@ -19,17 +19,6 @@ export function StoreCache(
       data: writable(entry?.data),
       error: writable(undefined),
     }
-    if (!entry) {
-      db.get<T>(key).then((db_entry) => {
-        if (!db_entry) return
-
-        const entry = memory.get<T>(key)
-        if (!entry || db_entry.updated > entry.updated) {
-          memory.set(key, db_entry)
-          store.data.set(db_entry.data)
-        }
-      })
-    }
     return store
   }
 
