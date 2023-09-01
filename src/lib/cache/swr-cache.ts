@@ -66,17 +66,13 @@ export function SWRCache(
       stores.delete(key)
       broadcaster.dispatchDelete(key)
     },
-    async set<T>(key: string, data: T, force = false) {
+    async set<T>(key: string, data: T) {
       const entry = createCacheEntry<T>(data)
       await db.set(key, entry)
 
-      if (force) {
+      const from_memory = memory.get(key)
+      if (!from_memory || data !== from_memory.data) {
         stores.set(key, entry)
-      } else {
-        const from_memory = memory.get(key)
-        if (!from_memory || data !== from_memory.data) {
-          stores.set(key, entry)
-        }
       }
 
       memory.set(key, entry)

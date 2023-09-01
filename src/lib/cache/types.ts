@@ -34,5 +34,5 @@ export type SWRCache = {
   stores: StoreCache
   clear(): void
   delete(key: string): void
-  set<T>(key: string, data: T, force?: boolean): Promise<CacheEntry<T>>
+  set<T>(key: string, data: T): Promise<CacheEntry<T>>
 }
