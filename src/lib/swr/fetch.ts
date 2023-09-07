@@ -99,10 +99,7 @@ export async function fromServer<T>({
 
     // If data has not changed, reuse old object to reduce rerenders
     const from_memory = cache.memory.get<T>(key)
-    if (
-      from_memory &&
-      JSON.stringify(from_memory.data) === JSON.stringify(data)
-    ) {
+    if (from_memory && isEquivalent(from_memory.data, data)) {
       data = await from_memory.data
     }
 
@@ -112,4 +109,15 @@ export async function fromServer<T>({
     cache.stores.setError(key, e as Error)
     throw e
   }
+}
+
+function isEquivalent(a: unknown, b: unknown) {
+  // If this is a plain object, try comparing JSON strings
+  // This will have issues if there are nested Maps, Sets, etc.
+  // typeof null === 'object', so check for that first
+  if (a && typeof a === 'object' && a.constructor === Object) {
+    return JSON.stringify(a) === JSON.stringify(b)
+  }
+
+  return a === b
 }
