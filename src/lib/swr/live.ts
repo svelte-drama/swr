@@ -24,7 +24,6 @@ export function live<T>(
   })
 
   const store = derived([data, observer], ([data]) => {
-    if (data === undefined) runFetch()
     return data
   })
 

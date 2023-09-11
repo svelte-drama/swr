@@ -1,6 +1,6 @@
 {
   "name": "@svelte-drama/swr",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "scripts": {
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "dev": "vite dev --open",
