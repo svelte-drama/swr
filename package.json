@@ -1,6 +1,6 @@
 {
   "name": "@svelte-drama/swr",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "scripts": {
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "dev": "vite dev --open",
@@ -27,9 +27,9 @@
   },
   "exports": {
     ".": {
-      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts",
       "svelte": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     }
   },
   "files": [
