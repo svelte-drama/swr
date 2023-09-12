@@ -11,16 +11,21 @@ export type IndexedDBCache = {
   get<T>(key: string): Promise<CacheEntry<T> | undefined>
   set<T>(key: string, entry: CacheEntry<T>): Promise<void>
 }
+
 export type MemoryCache = {
   clear(): void
   delete(key: string): void
   get<T>(key: string): CacheEntry<T> | undefined
   set<T>(key: string, entry: CacheEntry<T>): void
 }
+
 export type StoreCache = {
   clear(): void
   delete(key: string): void
-  get<T>(key: string): {
+  get<T>(
+    key: string,
+    runFetch: () => Promise<unknown>,
+  ): {
     data: Readable<T | undefined>
     error: Readable<Error | undefined>
   }

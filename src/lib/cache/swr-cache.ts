@@ -13,7 +13,7 @@ export function SWRCache(
 ): SWRCache {
   const db = IndexedDBCache(model_name)
   const memory = MemoryCache()
-  const stores = StoreCache(memory, db)
+  const stores = StoreCache(memory)
 
   broadcaster.on((event) => {
     if (isEventSameOrigin(event)) {
