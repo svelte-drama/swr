@@ -13,7 +13,7 @@ const changes = await run('git', [
 ])
 if (changes.includes('package.json')) {
   console.log(
-    '📦 package-lock.json changed. Running pnpm install to bring your dependencies up to date.'
+    '📦 package-lock.json changed. Running pnpm install to bring your dependencies up to date.',
   )
   await run('pnpm', ['install'], true)
 }

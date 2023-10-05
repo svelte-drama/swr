@@ -3,11 +3,11 @@ import type { CacheEntry } from '$lib/cache/types.js'
 export type RequestPool = {
   append<T>(
     key: string,
-    fn: () => Promise<CacheEntry<T>>
+    fn: () => Promise<CacheEntry<T>>,
   ): Promise<CacheEntry<T>>
   request<T>(
     key: string,
-    fn: () => Promise<CacheEntry<T>>
+    fn: () => Promise<CacheEntry<T>>,
   ): Promise<CacheEntry<T>>
 }
 export function RequestPool(): RequestPool {
