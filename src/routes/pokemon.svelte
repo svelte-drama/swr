@@ -38,6 +38,10 @@ const Note = swr({
   maxAge,
   name: 'notes:05-12-2023',
 })
+
+Pokemon.keys().then(keys => {
+  console.log("#KEYS#", keys)
+})
 </script>
 
 <script lang="ts">

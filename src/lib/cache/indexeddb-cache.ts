@@ -24,6 +24,9 @@ export function IndexedDBCache(model_name: ModelName): IndexedDBCache {
     async get(key) {
       return (await cache).get(key)
     },
+    async keys() {
+      return (await cache).keys()
+    },
     async set(key, data) {
       return (await cache).set(key, data)
     },
@@ -36,6 +39,9 @@ const mockCache: IndexedDBCache = {
   async get() {
     return undefined
   },
+  async keys() {
+    return null
+  },
   async set() {},
 }
 
@@ -45,15 +51,19 @@ async function CreateIndexedDBCache(
   await openDatabase().then(removeOldRecords)
   const getKey = (key: string) => `${model_name}${SEPARATOR}${key}`
 
+  function getKeyRange() {
+    const start = getKey('')
+    const char_code = start.charCodeAt(start.length - 1)
+    const next_char = String.fromCharCode(char_code + 1)
+    const end = start.substring(0, start.length - 1) + next_char
+
+    return IDBKeyRange.bound(start, end, false, true)
+  }
+
   return {
     async clear() {
       await makeRequest('readwrite', (store) => {
-        const start = getKey('')
-        const char_code = start.charCodeAt(start.length - 1)
-        const next_char = String.fromCharCode(char_code + 1)
-        const end = start.substring(0, start.length - 1) + next_char
-
-        const range = IDBKeyRange.bound(start, end, false, true)
+        const range = getKeyRange()
         return store.delete(range)
       })
     },
@@ -68,6 +78,12 @@ async function CreateIndexedDBCache(
         const db_key = getKey(key)
         return store.get(db_key)
       })
+    },
+    async keys() {
+      return makeRequest('readonly', (store) => {
+        const range = getKeyRange()
+        return store.getAllKeys(range)
+      }) as Promise<string[]>
     },
     async set(key, entry) {
       await makeRequest('readwrite', (store) => {

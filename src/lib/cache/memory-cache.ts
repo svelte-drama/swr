@@ -10,6 +10,9 @@ export function MemoryCache(): MemoryCache {
     delete(key) {
       cache.delete(key)
     },
+    keys() {
+      return [...cache.keys()]
+    },
     set(key, entry) {
       cache.set(key, entry)
     },

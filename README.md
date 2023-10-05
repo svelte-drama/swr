@@ -76,6 +76,10 @@ The returned object `model` has several functions for fetching data.
 
   Returns data from cache if less than `maxAge` or performs a request using the provided `fetcher`
 
+- `model.keys() => Promise<string[]>`
+
+  Returns all currently cached keys, regardless of age.
+
 - `model.live(id?: ID, susepnd?: SuspenseFn) => Readable<MODEL | undefined>`
 
   Returns a Svelte store that tracks the currently cached data. If no information is in the cache, the store will have the value `undefined` while data is requested. If the data in the cache is older than `maxAge`, stale data will be returned while a request to update data will be performed in the background.

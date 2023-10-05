@@ -39,11 +39,11 @@ export function swr<ID, T>(options: {
   async function update(params: ID, data: T): Promise<T>
   async function update(
     params: ID,
-    fn: (data: T) => MaybePromise<T>
+    fn: (data: T) => MaybePromise<T>,
   ): Promise<T>
   async function update(
     params: ID,
-    data: T | ((data: T) => MaybePromise<T>)
+    data: T | ((data: T) => MaybePromise<T>),
   ): Promise<T> {
     const options = getOptions(params)
     if (isFunction(data)) {
@@ -68,6 +68,9 @@ export function swr<ID, T>(options: {
       const entry = await fetch<T>(options)
       return entry.data
     },
+    async keys() {
+      return (await internals.cache.db.keys()) ?? internals.cache.memory.keys()
+    },
     live(params?: ID, suspend?: SuspenseFn) {
       // If createKey.length is zero, then there are no required params
       if (createKey.length && params === undefined) {
@@ -87,7 +90,7 @@ export function swr<ID, T>(options: {
 }
 
 function isFunction<T>(
-  fn: T | ((data: T) => MaybePromise<T>)
+  fn: T | ((data: T) => MaybePromise<T>),
 ): fn is (data: T) => MaybePromise<T> {
   return typeof fn === 'function'
 }
