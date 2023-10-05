@@ -80,10 +80,14 @@ async function CreateIndexedDBCache(
       })
     },
     async keys() {
-      return makeRequest('readonly', (store) => {
+      const keys = await makeRequest('readonly', (store) => {
         const range = getKeyRange()
         return store.getAllKeys(range)
-      }) as Promise<string[]>
+      })
+      return keys.map((key) => {
+        const [_prefix, value] = key.toString().split(SEPARATOR)
+        return value
+      })
     },
     async set(key, entry) {
       await makeRequest('readwrite', (store) => {
