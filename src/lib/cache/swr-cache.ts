@@ -54,16 +54,16 @@ export function SWRCache(
     db,
     memory,
     stores,
-    clear() {
-      db.clear()
+    async clear() {
       memory.clear()
       stores.clear()
+      await db.clear()
       broadcaster.dispatchClear()
     },
-    delete(key: string) {
-      db.delete(key)
+    async delete(key: string) {
       memory.delete(key)
       stores.delete(key)
+      await db.delete(key)
       broadcaster.dispatchDelete(key)
     },
     async set<T>(key: string, data: T, force = false) {

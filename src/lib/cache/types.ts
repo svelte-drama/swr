@@ -39,7 +39,7 @@ export type SWRCache = {
   db: IndexedDBCache
   memory: MemoryCache
   stores: StoreCache
-  clear(): void
-  delete(key: string): void
+  clear(): Promise<void>
+  delete(key: string): Promise<void>
   set<T>(key: string, data: T, force?: boolean): Promise<CacheEntry<T>>
 }

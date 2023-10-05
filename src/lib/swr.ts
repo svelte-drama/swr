@@ -57,11 +57,13 @@ export function swr<ID, T>(options: {
 
   return {
     async clear() {
-      internals.cache.clear()
+      await internals.cache.clear()
     },
     async delete(params: ID) {
       const key = createKey(params)
-      internals.cache.delete(key)
+      await internals.lock(key, true, async () => {
+        await internals.cache.delete(key)
+      })
     },
     async fetch(params: ID): Promise<T> {
       const options = getOptions(params)
