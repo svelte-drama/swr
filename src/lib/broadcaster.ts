@@ -71,7 +71,10 @@ const createBroadcaster = memoize(() => {
   if (typeof window === 'undefined') {
     return SWRNoopEvents
   }
-  if (typeof BroadcastChannel === 'undefined') {
+  if (
+    typeof BroadcastChannel === 'undefined' ||
+    typeof navigator.locks === 'undefined'
+  ) {
     return SWREventTarget()
   }
   return SWRBroadcastChannel()
