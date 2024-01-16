@@ -119,7 +119,16 @@ async function makeRequest<T>(
     request.onsuccess = (e) => {
       const target = e.target as IDBRequest
       resolve(target.result)
-      transaction.commit?.()
+      try {
+        transaction.commit?.()
+      } catch (e) {
+        if (e instanceof Error && e.name === 'InvalidStateError') {
+          // Manually closing transactions is optional anyways
+          // We do it simply for minor performance gains
+        } else {
+          throw e
+        }
+      }
     }
   })
 }
