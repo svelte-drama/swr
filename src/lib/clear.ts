@@ -3,7 +3,9 @@ import { clearDatabase } from '$lib/cache/indexeddb-cache.js'
 
 export async function clear() {
   try {
-    await clearDatabase()
+    if (typeof indexedDB !== 'undefined') {
+      await clearDatabase()
+    }
   } finally {
     dispatchClearAll()
   }
