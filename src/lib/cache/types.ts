@@ -1,4 +1,4 @@
-import type { Readable } from 'svelte/store'
+import type { ReadableSignalStore } from '@svelte-drama/signal-store'
 
 export type CacheEntry<T = unknown> = {
   data: T
@@ -28,8 +28,8 @@ export type StoreCache = {
     key: string,
     runFetch: () => Promise<unknown>,
   ): {
-    data: Readable<T | undefined>
-    error: Readable<Error | undefined>
+    data: ReadableSignalStore<T | undefined>
+    error: ReadableSignalStore<Error | undefined>
   }
   set(key: string, entry: CacheEntry): void
   setError(key: string, error: Error): void

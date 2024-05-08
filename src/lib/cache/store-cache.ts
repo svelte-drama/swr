@@ -1,10 +1,10 @@
-import { writable, type Readable, type Writable } from 'svelte/store'
+import { writable, type WritableSignalStore } from '@svelte-drama/signal-store'
 import { getOrSet } from '$lib/util/get-or-set.js'
 import type { MemoryCache, StoreCache } from './types.js'
 
 type Store<T = any> = {
-  data: Writable<T | undefined>
-  error: Writable<Error | undefined>
+  data: WritableSignalStore<T | undefined>
+  error: WritableSignalStore<Error | undefined>
 }
 
 export function StoreCache(memory: MemoryCache): StoreCache {

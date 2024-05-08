@@ -1,4 +1,3 @@
-import { readable } from 'svelte/store'
 import { atomicUpdate } from '$lib/swr/atomic-update.js'
 import { fetch } from '$lib/swr/fetch.js'
 import { createInternals } from '$lib/swr/internals.js'
@@ -11,6 +10,7 @@ import type {
   ModelName,
   SuspenseFn,
 } from '$lib/types.js'
+import { readable } from '@svelte-drama/signal-store'
 
 export function swr<ID, T>(options: {
   fetcher: Fetcher<ID, T>
@@ -76,7 +76,7 @@ export function swr<ID, T>(options: {
     live(params?: ID, suspend?: SuspenseFn) {
       // If createKey.length is zero, then there are no required params
       if (createKey.length && params === undefined) {
-        return readable<undefined>()
+        return readable<undefined>(undefined)
       }
       const options = getOptions(params!)
       const runFetch = () => fetch(options)
