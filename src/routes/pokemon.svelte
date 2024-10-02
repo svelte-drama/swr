@@ -1,7 +1,7 @@
 <script lang="ts" context="module">
 import { swr } from '$lib/index.js'
 
-type Pokemon = {
+type PokemonType = {
   species: {
     name: string
   }
@@ -18,7 +18,7 @@ const Pokemon = swr({
   key(id: number) {
     return `https://pokeapi.co/api/v2/pokemon/${id}/`
   },
-  async fetcher(key): Promise<Pokemon> {
+  async fetcher(key): Promise<PokemonType> {
     const response = await fetch(key)
     await sleep()
     return response.json()
@@ -39,8 +39,8 @@ const Note = swr({
   name: 'notes:05-12-2023',
 })
 
-Pokemon.keys().then(keys => {
-  console.log("#KEYS#", keys)
+Pokemon.keys().then((keys) => {
+  console.log('#KEYS#', keys)
 })
 </script>
 
@@ -55,7 +55,7 @@ $: console.log('DATA', $data)
 $: note = Note.live($data?.species.name, suspend)
 $: console.log('NOTE', $note)
 
-function onChange(e: { currentTarget: HTMLTextAreaElement }) {
+function onchange(e: { currentTarget: HTMLTextAreaElement }) {
   if (!$data) throw new TypeError()
   const name = $data.species.name
   const value = e.currentTarget.value
@@ -70,6 +70,6 @@ function onChange(e: { currentTarget: HTMLTextAreaElement }) {
     <img alt="" src={$data.sprites.front_default} />
   </p>
   <p>
-    <textarea value={$note} on:change={onChange} />
+    <textarea value={$note} {onchange}></textarea>
   </p>
 {/if}
