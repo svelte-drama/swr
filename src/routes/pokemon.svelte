@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 import { swr } from '$lib/index.js'
 
 type PokemonType = {
@@ -49,27 +49,33 @@ import { createSuspense } from '@svelte-drama/suspense'
 
 const suspend = createSuspense()
 
-export let number: number
-$: data = Pokemon.live(number, suspend)
-$: console.log('DATA', $data)
-$: note = Note.live($data?.species.name, suspend)
-$: console.log('NOTE', $note)
+let { id } = $props()
+
+let pokemon = $derived(Pokemon.get(id))
+$effect(() => {
+  console.log('DATA', pokemon())
+})
+
+let note = $derived(Note.get(pokemon()?.species.name))
+$effect(() => {
+  console.log('NOTE', note())
+})
 
 function onchange(e: { currentTarget: HTMLTextAreaElement }) {
-  if (!$data) throw new TypeError()
-  const name = $data.species.name
+  if (!pokemon()) throw new TypeError()
+  const name = pokemon().species.name
   const value = e.currentTarget.value
   Note.update(name, value)
   localStorage.setItem(`/api/notes/${name}`, value)
 }
 </script>
 
-{#if $data}
-  <h1>{$data.species.name}</h1>
+{#await suspend.all(pokemon, note) then [pokemon, note]}
+  <h1>{pokemon.species.name}</h1>
   <p>
-    <img alt="" src={$data.sprites.front_default} />
+    <img alt="" src={pokemon.sprites.front_default} />
   </p>
   <p>
-    <textarea value={$note} {onchange}></textarea>
+    <textarea value={note} {onchange}></textarea>
   </p>
-{/if}
+{/await}

@@ -1,5 +1,3 @@
-import type { Readable } from 'svelte/store'
-
 export type CacheEntry<T = unknown> = {
   data: T
   updated: number
@@ -21,24 +19,9 @@ export type MemoryCache = {
   set<T>(key: string, entry: CacheEntry<T>): void
 }
 
-export type StoreCache = {
-  clear(): void
-  delete(key: string): void
-  get<T>(
-    key: string,
-    runFetch: () => Promise<unknown>,
-  ): {
-    data: Readable<T | undefined>
-    error: Readable<Error | undefined>
-  }
-  set(key: string, entry: CacheEntry): void
-  setError(key: string, error: Error): void
-}
-
 export type SWRCache = {
   db: IndexedDBCache
   memory: MemoryCache
-  stores: StoreCache
   clear(): Promise<void>
   delete(key: string): Promise<void>
   set<T>(key: string, data: T, force?: boolean): Promise<CacheEntry<T>>

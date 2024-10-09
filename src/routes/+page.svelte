@@ -4,10 +4,10 @@ import Pokemon from './pokemon.svelte'
 import { Suspense } from '@svelte-drama/suspense'
 import { fade } from 'svelte/transition'
 
-let number = $state(133)
+let id = $state(133)
 </script>
 
-<input type="number" min="1" max="150" bind:value={number} />
+<input type="number" min="1" max="150" bind:value={id} />
 <p>
   <button type="button" onclick={clear}> Clear Cache </button>
 </p>
@@ -20,7 +20,7 @@ let number = $state(133)
     <p>An error has occurred.</p>
   {/snippet}
 
-  {#key number}
-    <Pokemon {number} />
+  {#key id}
+    <Pokemon {id} />
   {/key}
 </Suspense>

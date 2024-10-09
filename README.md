@@ -72,32 +72,13 @@ The returned object `model` has several functions for fetching data.
 
   Delete item from cache.
 
-- `model.fetch(id: ID) => Promise<MODEL>`
+- `model.get(id: ID) => Promise<MODEL>`
 
   Returns data from cache if less than `maxAge` or performs a request using the provided `fetcher`
 
 - `model.keys() => Promise<string[]>`
 
   Returns all currently cached keys, regardless of age.
-
-- `model.live(id?: ID, susepnd?: SuspenseFn) => Readable<MODEL | undefined>`
-
-  Returns a Svelte store that tracks the currently cached data. If no information is in the cache, the store will have the value `undefined` while data is requested. If the data in the cache is older than `maxAge`, stale data will be returned while a request to update data will be performed in the background.
-
-  `id` may be undefined to allow for chaining inside of components. In a Svelte component, this will evaluate without errors:
-
-  ```ts
-  $: const parent = model.live(id)
-  $: const child = model.live($parent?.foreign_key)
-  ```
-
-  If integrating with [@svelte-drama/suspense](https://www.npmjs.com/package/@svelte-drama/suspense), the result of `createSuspense` may be passed to register this store.
-
-  ```ts
-  import { createSuspense } from '@svelte-drama/suspense'
-  const suspend = createSuspense()
-  const data = model.live(id, suspend)
-  ```
 
 - `model.refresh(id: ID) => Promise<MODEL>`
 

@@ -1,16 +1,9 @@
-import { readable } from 'svelte/store'
 import { atomicUpdate } from '$lib/swr/atomic-update.js'
 import { fetch } from '$lib/swr/fetch.js'
 import { createInternals } from '$lib/swr/internals.js'
-import { live } from '$lib/swr/live.js'
 import { refresh } from '$lib/swr/refresh.js'
 import { update as runUpdate } from '$lib/swr/update.js'
-import type {
-  Fetcher,
-  MaybePromise,
-  ModelName,
-  SuspenseFn,
-} from '$lib/types.js'
+import type { Fetcher, MaybePromise, ModelName } from '$lib/types.js'
 
 export function swr<ID, T>(options: {
   fetcher: Fetcher<ID, T>
@@ -65,22 +58,13 @@ export function swr<ID, T>(options: {
         await internals.cache.delete(key)
       })
     },
-    async fetch(params: ID): Promise<T> {
+    async get(params: ID): Promise<T> {
       const options = getOptions(params)
       const entry = await fetch<T>(options)
       return entry.data
     },
     async keys() {
       return (await internals.cache.db.keys()) ?? internals.cache.memory.keys()
-    },
-    live(params?: ID, suspend?: SuspenseFn) {
-      // If createKey.length is zero, then there are no required params
-      if (createKey.length && params === undefined) {
-        return readable<undefined>()
-      }
-      const options = getOptions(params!)
-      const runFetch = () => fetch(options)
-      return live<T>(options, runFetch, suspend)
     },
     async refresh(params: ID): Promise<T> {
       const options = getOptions(params)

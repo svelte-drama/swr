@@ -77,7 +77,6 @@ async function fromCache<T>({
   const from_db = await cache.db.get<T>(key)
   if (!from_db) return
   cache.memory.set(key, from_db)
-  cache.stores.set(key, from_db)
 
   if (isCurrent(from_db, maxAge)) {
     return from_db
@@ -106,7 +105,6 @@ export async function fromServer<T>({
     return cache.set(key, data)
   } catch (e) {
     console.error(e)
-    cache.stores.setError(key, e as Error)
     throw e
   }
 }
