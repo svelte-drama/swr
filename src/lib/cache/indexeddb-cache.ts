@@ -5,7 +5,7 @@ import type { CacheEntry, IndexedDBCache } from './types.js'
 const DATABASE_NAME = '$$swr'
 const STORE_NAME = 'cache'
 
-export function IndexedDBCache(model_name: ModelName): IndexedDBCache {
+export function IndexedDBCache<T>(model_name: ModelName): IndexedDBCache<T> {
   const cache =
     typeof indexedDB === 'undefined'
       ? mockCache
@@ -33,7 +33,7 @@ export function IndexedDBCache(model_name: ModelName): IndexedDBCache {
   }
 }
 
-const mockCache: IndexedDBCache = {
+const mockCache: IndexedDBCache<any> = {
   async clear() {},
   async delete() {},
   async get() {
@@ -45,9 +45,9 @@ const mockCache: IndexedDBCache = {
   async set() {},
 }
 
-async function CreateIndexedDBCache(
+async function CreateIndexedDBCache<T>(
   model_name: ModelName,
-): Promise<IndexedDBCache> {
+): Promise<IndexedDBCache<T>> {
   await openDatabase().then(removeOldRecords)
   const getKey = (key: string) => `${model_name}${SEPARATOR}${key}`
 

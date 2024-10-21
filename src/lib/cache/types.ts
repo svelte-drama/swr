@@ -3,26 +3,26 @@ export type CacheEntry<T = unknown> = {
   updated: number
 }
 
-export type IndexedDBCache = {
+export type IndexedDBCache<T> = {
   clear(): Promise<void>
   delete(key: string): Promise<void>
-  get<T>(key: string): Promise<CacheEntry<T> | undefined>
+  get(key: string): Promise<CacheEntry<T> | undefined>
   keys(): Promise<string[] | null>
-  set<T>(key: string, entry: CacheEntry<T>): Promise<void>
+  set(key: string, entry: CacheEntry<T>): Promise<void>
 }
 
-export type MemoryCache = {
+export type MemoryCache<T> = {
   clear(): void
   delete(key: string): void
-  get<T>(key: string): CacheEntry<T> | undefined
+  get(key: string): CacheEntry<T> | undefined
   keys(): string[]
-  set<T>(key: string, entry: CacheEntry<T>): void
+  set(key: string, entry: CacheEntry): void
 }
 
-export type SWRCache = {
-  db: IndexedDBCache
-  memory: MemoryCache
+export type SWRCache<T> = {
+  db: IndexedDBCache<T>
+  memory: MemoryCache<T>
   clear(): Promise<void>
   delete(key: string): Promise<void>
-  set<T>(key: string, data: T, force?: boolean): Promise<CacheEntry<T>>
+  set(key: string, data: T): Promise<CacheEntry<T>>
 }

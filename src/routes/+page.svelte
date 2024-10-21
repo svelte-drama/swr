@@ -14,7 +14,7 @@ let id = $state(133)
 
 <Suspense>
   {#snippet loading()}
-    <p in:fade>Loading...</p>
+    <p in:fade>Loading Pokemon...</p>
   {/snippet}
   {#snippet error()}
     <p>An error has occurred.</p>

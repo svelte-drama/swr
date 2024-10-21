@@ -6,12 +6,12 @@ import { IndexedDBCache } from './indexeddb-cache.js'
 import { MemoryCache } from './memory-cache.js'
 import type { SWRCache } from './types.js'
 
-export function SWRCache(
+export function SWRCache<T>(
   model_name: ModelName,
   broadcaster: Broadcaster,
-): SWRCache {
-  const db = IndexedDBCache(model_name)
-  const memory = MemoryCache()
+): SWRCache<T> {
+  const db = IndexedDBCache<T>(model_name)
+  const memory = MemoryCache<T>()
 
   broadcaster.on((event) => {
     if (isEventSameOrigin(event)) {
@@ -31,7 +31,7 @@ export function SWRCache(
 
       case 'data': {
         const entry = memory.get(event.key)
-        if (!entry || entry.updated < event.data.updated) {
+        if (entry && entry.updated < event.data.updated) {
           memory.set(event.key, event.data)
         }
         break
@@ -57,7 +57,7 @@ export function SWRCache(
       await db.delete(key)
       broadcaster.dispatchDelete(key)
     },
-    async set<T>(key: string, data: T, force = false) {
+    async set(key: string, data: T) {
       const entry = createCacheEntry<T>(data)
       await db.set(key, entry)
 

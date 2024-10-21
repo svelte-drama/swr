@@ -3,7 +3,8 @@ import { fetch } from '$lib/swr/fetch.js'
 import { createInternals } from '$lib/swr/internals.js'
 import { refresh } from '$lib/swr/refresh.js'
 import { update as runUpdate } from '$lib/swr/update.js'
-import type { Fetcher, MaybePromise, ModelName } from '$lib/types.js'
+import type { Fetcher, MaybePromise, ModelName, SWRModel } from '$lib/types.js'
+import { readable, toStore } from 'svelte/store'
 
 export function swr<ID, T>(options: {
   fetcher: Fetcher<ID, T>
@@ -13,7 +14,7 @@ export function swr<ID, T>(options: {
 }) {
   const createKey = options.key
   const model_name = options.name ?? ''
-  const internals = createInternals(model_name)
+  const internals = createInternals<T>(model_name)
 
   function getOptions(params: ID) {
     const key = createKey(params)
@@ -58,10 +59,73 @@ export function swr<ID, T>(options: {
         await internals.cache.delete(key)
       })
     },
-    async get(params: ID): Promise<T> {
+    get(params?: ID): SWRModel<T> {
+      if (params === undefined) {
+        const null_promise = new Promise<T>(() => {})
+        return {
+          error: undefined,
+          value: undefined,
+
+          [Symbol.toStringTag]: 'SWRModel',
+          catch(reject) {
+            return null_promise.catch(reject)
+          },
+          finally(fn) {
+            return null_promise.finally(fn)
+          },
+          then(resolve, reject) {
+            return null_promise.then(resolve, reject)
+          },
+
+          get subscribe() {
+            const store = readable(undefined)
+            Object.defineProperty(this, "subscribe", store.subscribe)
+            return store.subscribe
+          }
+        }
+      }
+
       const options = getOptions(params)
-      const entry = await fetch<T>(options)
-      return entry.data
+      const key = createKey(params)
+      const data = fetch<T>(options)
+
+      let error = $state<Error | undefined>(undefined)
+      data.catch((e) => (error = e))
+
+      const value: SWRModel<T>['value'] = $derived(
+        internals.cache.memory.get(key)?.data,
+      )
+      const promise = $derived.by(() => {
+        return value === undefined
+          ? data.then((entry) => entry.data)
+          : Promise.resolve(value)
+      })
+
+      return {
+        get error() {
+          return error
+        },
+        get value() {
+          return value
+        },
+
+        [Symbol.toStringTag]: 'SWRModel',
+        get catch() {
+          return promise.catch.bind(promise)
+        },
+        get finally() {
+          return promise.finally.bind(promise)
+        },
+        get then() {
+          return promise.then.bind(promise)
+        },
+
+        get subscribe() {
+          const store = toStore(() => value)
+          Object.defineProperty(this, "subscribe", store.subscribe)
+          return store.subscribe
+        }
+      }
     },
     async keys() {
       return (await internals.cache.db.keys()) ?? internals.cache.memory.keys()

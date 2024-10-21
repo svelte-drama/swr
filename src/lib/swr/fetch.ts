@@ -4,12 +4,12 @@ import { getLastRefresh } from '$lib/refresh.js'
 import type { RequestPool } from '$lib/request-pool.js'
 
 type FetchParams<T> = {
-  cache: SWRCache
+  cache: SWRCache<T>
   fetcher(): Promise<T>
   key: string
   lock: LockFn
   maxAge: number
-  request_pool: RequestPool
+  request_pool: RequestPool<T>
 }
 
 export async function fetch<T>({
@@ -20,7 +20,7 @@ export async function fetch<T>({
   maxAge,
   request_pool,
 }: FetchParams<T>): Promise<CacheEntry<T>> {
-  return request_pool.request<T>(key, async () => {
+  return request_pool.request(key, async () => {
     const entry = await lock(key, false, () => {
       return fromCache<T>({ cache, key, maxAge })
     })
@@ -34,7 +34,7 @@ export async function fetch<T>({
       try {
         return fromServer({ cache, fetcher, key })
       } catch (e) {
-        const entry = await cache.db.get<T>(key)
+        const entry = await cache.db.get(key)
         if (entry) {
           return entry
         } else {
@@ -61,11 +61,11 @@ async function fromCache<T>({
   key,
   maxAge,
 }: {
-  cache: SWRCache
+  cache: SWRCache<T>
   key: string
   maxAge: number
 }) {
-  const from_memory = cache.memory.get<T>(key)
+  const from_memory = cache.memory.get(key)
   if (isCurrent(from_memory, maxAge)) {
     return from_memory
   }
@@ -74,7 +74,7 @@ async function fromCache<T>({
     return
   }
 
-  const from_db = await cache.db.get<T>(key)
+  const from_db = await cache.db.get(key)
   if (!from_db) return
   cache.memory.set(key, from_db)
 
@@ -88,7 +88,7 @@ export async function fromServer<T>({
   fetcher,
   key,
 }: {
-  cache: SWRCache
+  cache: SWRCache<T>
   fetcher(): Promise<T>
   key: string
 }) {
@@ -97,7 +97,7 @@ export async function fromServer<T>({
     let data = await fetcher()
 
     // If data has not changed, reuse old object to reduce rerenders
-    const from_memory = cache.memory.get<T>(key)
+    const from_memory = cache.memory.get(key)
     if (from_memory && isEquivalent(from_memory.data, data)) {
       data = await from_memory.data
     }

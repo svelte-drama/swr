@@ -1,7 +1,8 @@
+import { SvelteMap } from 'svelte/reactivity'
 import type { MemoryCache, CacheEntry } from './types.js'
 
-export function MemoryCache(): MemoryCache {
-  const cache = new Map<string, CacheEntry>()
+export function MemoryCache<T>(): MemoryCache<T> {
+  const cache = new SvelteMap<string, CacheEntry>()
 
   return {
     clear() {

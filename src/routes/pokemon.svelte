@@ -47,31 +47,33 @@ Pokemon.keys().then((keys) => {
 <script lang="ts">
 import { createSuspense } from '@svelte-drama/suspense'
 
+interface Props {
+  id: number
+}
+let { id }: Props = $props()
+const pokemon = $derived(Pokemon.get(id))
+const note = $derived(Note.get(pokemon.value?.species.name))
+
 const suspend = createSuspense()
 
-let { id } = $props()
-
-let pokemon = $derived(Pokemon.get(id))
-$effect(() => {
-  console.log('DATA', pokemon())
-})
-
-let note = $derived(Note.get(pokemon()?.species.name))
-$effect(() => {
-  console.log('NOTE', note())
-})
-
-function onchange(e: { currentTarget: HTMLTextAreaElement }) {
-  if (!pokemon()) throw new TypeError()
-  const name = pokemon().species.name
+async function onchange(e: { currentTarget: HTMLTextAreaElement }) {
+  if (!pokemon.value) throw new TypeError()
+  const name = pokemon.value.species.name
   const value = e.currentTarget.value
   Note.update(name, value)
   localStorage.setItem(`/api/notes/${name}`, value)
 }
+
+$effect(() => {
+  suspend(pokemon)
+})
 </script>
 
-{#await suspend.all(pokemon, note) then [pokemon, note]}
-  <h1>{pokemon.species.name}</h1>
+<h1>Promise</h1>
+{#await suspend(Promise.all([pokemon, note]))}
+  <p>Loading...</p>
+{:then [pokemon, note]}
+  <h2>{pokemon.species.name}</h2>
   <p>
     <img alt="" src={pokemon.sprites.front_default} />
   </p>
@@ -79,3 +81,25 @@ function onchange(e: { currentTarget: HTMLTextAreaElement }) {
     <textarea value={note} {onchange}></textarea>
   </p>
 {/await}
+
+<h1>Store</h1>
+{#if $pokemon && $note !== undefined}
+  <h2>{$pokemon.species.name}</h2>
+  <p>
+    <img alt="" src={$pokemon.sprites.front_default} />
+  </p>
+  <p>
+    <textarea value={$note} {onchange}></textarea>
+  </p>
+{/if}
+
+<h1>Value</h1>
+{#if pokemon.value && note.value !== undefined}
+  <h2>{pokemon.value.species.name}</h2>
+  <p>
+    <img alt="" src={pokemon.value.sprites.front_default} />
+  </p>
+  <p>
+    <textarea value={note.value} {onchange}></textarea>
+  </p>
+{/if}

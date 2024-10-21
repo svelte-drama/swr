@@ -7,24 +7,22 @@ import { RequestPool } from '$lib/request-pool.js'
 import type { ModelName } from '$lib/types.js'
 import { getOrSet } from '$lib/util/get-or-set.js'
 
-export type Internals = {
+export type Internals<T> = {
   broadcaster: BroadcasterType
-  cache: SWRCacheType
+  cache: SWRCacheType<T>
   lock: LockFn
-  request_pool: RequestPool
+  request_pool: RequestPool<T>
 }
-const internals_cache = new Map<ModelName, Internals>()
+const internals_cache = new Map<ModelName, Internals<any>>()
 
-export function createInternals(model_name: ModelName) {
-  return getOrSet<ModelName, Internals>(internals_cache, model_name, () => {
+export function createInternals<T>(model_name: ModelName) {
+  return getOrSet<ModelName, Internals<T>>(internals_cache, model_name, () => {
     const broadcaster = Broadcaster(model_name)
-    const cache = SWRCache(model_name, broadcaster)
-    const lock = Lock(model_name)
 
     return {
       broadcaster,
-      cache,
-      lock,
+      cache: SWRCache(model_name, broadcaster),
+      lock: Lock(model_name),
       request_pool: RequestPool(),
     }
   })

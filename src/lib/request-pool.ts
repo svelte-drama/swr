@@ -1,13 +1,13 @@
 import type { CacheEntry } from '$lib/cache/types.js'
 
-export type RequestPool = {
-  append<T, R = CacheEntry<T>>(key: string, fn: () => Promise<R>): Promise<R>
-  request<T, R = CacheEntry<T>>(key: string, fn: () => Promise<R>): Promise<R>
+export type RequestPool<T> = {
+  append(key: string, fn: () => Promise<CacheEntry<T>>): Promise<CacheEntry<T>>
+  request(key: string, fn: () => Promise<CacheEntry<T>>): Promise<CacheEntry<T>>
 }
-export function RequestPool(): RequestPool {
-  const pool = new Map<string, Promise<unknown>>()
+export function RequestPool<T>(): RequestPool<T> {
+  const pool = new Map<string, Promise<CacheEntry<T>>>()
 
-  function set(key: string, request: Promise<unknown>) {
+  function set(key: string, request: Promise<CacheEntry<T>>) {
     pool.set(key, request)
     request.finally(() => {
       const current = pool.get(key)
@@ -25,9 +25,9 @@ export function RequestPool(): RequestPool {
       set(key, request)
       return request
     },
-    request<R>(key: string, fn: () => Promise<R>) {
+    request(key, fn) {
       if (pool.has(key)) {
-        return pool.get(key) as Promise<R>
+        return pool.get(key)!
       }
 
       const request = fn()
