@@ -1,6 +1,6 @@
 import { Broadcaster } from '$lib/broadcaster.js'
 import type { Broadcaster as BroadcasterType } from '$lib/broadcaster/types.js'
-import { SWRCache } from '$lib/cache/swr-cache.js'
+import { SWRCache } from '$lib/cache/swr-cache.svelte.js'
 import type { SWRCache as SWRCacheType } from '$lib/cache/types.js'
 import { Lock, type LockFn } from '$lib/lock.js'
 import { RequestPool } from '$lib/request-pool.js'

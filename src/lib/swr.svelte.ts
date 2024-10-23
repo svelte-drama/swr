@@ -79,9 +79,9 @@ export function swr<ID, T>(options: {
 
           get subscribe() {
             const store = readable(undefined)
-            Object.defineProperty(this, "subscribe", store.subscribe)
+            Object.defineProperty(this, 'subscribe', store.subscribe)
             return store.subscribe
-          }
+          },
         }
       }
 
@@ -122,9 +122,9 @@ export function swr<ID, T>(options: {
 
         get subscribe() {
           const store = toStore(() => value)
-          Object.defineProperty(this, "subscribe", store.subscribe)
+          Object.defineProperty(this, 'subscribe', store.subscribe)
           return store.subscribe
-        }
+        },
       }
     },
     async keys() {

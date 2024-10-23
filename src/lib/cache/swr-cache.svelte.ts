@@ -58,11 +58,13 @@ export function SWRCache<T>(
       broadcaster.dispatchDelete(key)
     },
     async set(key: string, data: T) {
-      const entry = createCacheEntry<T>(data)
-      await db.set(key, entry)
+      const snapshot = $state.snapshot(data) as T
+      const entry = createCacheEntry<T>(snapshot)
 
+      await db.set(key, entry)
       memory.set(key, entry)
       broadcaster.dispatch(key, entry)
+
       return entry
     },
   }
