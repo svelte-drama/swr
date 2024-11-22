@@ -59,7 +59,7 @@ export function swr<ID, T>(options: {
         await internals.cache.delete(key)
       })
     },
-    get(params?: ID): SWRModel<T> {
+    get(params: ID | undefined): SWRModel<T> {
       if (params === undefined) {
         const null_promise = new Promise<T>(() => {})
         return {
@@ -87,19 +87,28 @@ export function swr<ID, T>(options: {
 
       const options = getOptions(params)
       const key = createKey(params)
-      const data = fetch<T>(options)
 
       let error = $state<Error | undefined>(undefined)
-      data.catch((e) => (error = e))
+      let data = $state(getData())
 
-      const value: SWRModel<T>['value'] = $derived(
-        internals.cache.memory.get(key)?.data,
-      )
       const promise = $derived.by(() => {
-        return value === undefined
-          ? data.then((entry) => entry.data)
-          : Promise.resolve(value)
+        return value === undefined ? data : Promise.resolve(value)
       })
+      const value = $derived(internals.cache.memory.get(key)?.data)
+      $effect(() => {
+        if (!value) data = getData()
+      })
+
+      async function getData() {
+        try {
+          const entry = await fetch<T>(options)
+          error = undefined
+          return entry.data
+        } catch (e) {
+          error = e as Error
+          throw e
+        }
+      }
 
       return {
         get error() {
