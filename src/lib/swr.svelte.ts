@@ -9,8 +9,8 @@ import { readable, toStore } from 'svelte/store'
 export function swr<ID, T>(options: {
   fetcher: Fetcher<ID, T>
   key(params: ID): string
-  maxAge?: number
-  name?: ModelName
+  maxAge: number
+  name: ModelName
 }) {
   const createKey = options.key
   const model_name = options.name ?? ''
@@ -26,7 +26,7 @@ export function swr<ID, T>(options: {
       ...internals,
       key,
       fetcher,
-      maxAge: options.maxAge ?? 0,
+      maxAge: options.maxAge,
     }
   }
 
@@ -87,16 +87,17 @@ export function swr<ID, T>(options: {
 
       const options = getOptions(params)
       const key = createKey(params)
+      getData()
 
       let error = $state<Error | undefined>(undefined)
-      let data = $state(getData())
 
-      const promise = $derived.by(() => {
-        return value === undefined ? data : Promise.resolve(value)
+      const value = $derived.by(() => {
+        const value = internals.cache.memory.get(key)?.data
+        if (value === undefined) getData()
+        return value
       })
-      const value = $derived(internals.cache.memory.get(key)?.data)
-      $effect(() => {
-        if (!value) data = getData()
+      const promise = $derived.by(() => {
+        return value === undefined ? getData() : Promise.resolve(value)
       })
 
       async function getData() {

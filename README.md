@@ -52,11 +52,11 @@ const model = swr<ID, MODEL>({
 
   A function to retrieve data from the server. It is passed `key`, the result of the `key` function and the same `id` passed to the `key` function.
 
-- `maxAge?: number = 0`
+- `maxAge: number`
 
   Only use cached values that are no older than `maxAge` in milliseconds.
 
-- `name?: string = ''`
+- `name: string`
 
   Segment the cache using this as a key. Models with the same name share the same cache, so key collision must be kept in mind.
 
