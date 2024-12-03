@@ -8,7 +8,7 @@ import type { ModelName } from '$lib/types.js'
 import { getOrSet } from '$lib/util/get-or-set.js'
 
 export type Internals<T> = {
-  broadcaster: BroadcasterType
+  broadcaster: BroadcasterType<T>
   cache: SWRCacheType<T>
   lock: LockFn
   request_pool: RequestPool<T>
@@ -17,7 +17,7 @@ const internals_cache = new Map<ModelName, Internals<any>>()
 
 export function createInternals<T>(model_name: ModelName) {
   return getOrSet<ModelName, Internals<T>>(internals_cache, model_name, () => {
-    const broadcaster = Broadcaster(model_name)
+    const broadcaster = Broadcaster<T>(model_name)
 
     return {
       broadcaster,

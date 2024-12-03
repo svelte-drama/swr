@@ -8,7 +8,7 @@ import type { SWRCache } from './types.js'
 
 export function SWRCache<T>(
   model_name: ModelName,
-  broadcaster: Broadcaster,
+  broadcaster: Broadcaster<T>,
 ): SWRCache<T> {
   const db = IndexedDBCache<T>(model_name)
   const memory = MemoryCache<T>()

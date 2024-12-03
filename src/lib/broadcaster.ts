@@ -13,10 +13,10 @@ import { memoize } from '$lib/util/memoize.js'
 
 const ORIGIN = `${Math.random().toString(36).substring(2, 11)}::${Date.now()}`
 
-export function Broadcaster(model_name: ModelName): Broadcaster {
+export function Broadcaster<T>(model_name: ModelName): Broadcaster<T> {
   const broadcaster = createBroadcaster()
 
-  function on<T>(fn: (event: BroadcastEvent<T>) => void) {
+  function on(fn: (event: BroadcastEvent<T>) => void) {
     return broadcaster.subscribe<BroadcastEvent<T>>((event) => {
       if (event.type === 'clear') {
         if (event.model === undefined || event.model === model_name) {
@@ -57,8 +57,8 @@ export function Broadcaster(model_name: ModelName): Broadcaster {
       broadcaster.dispatch(message)
     },
     on,
-    onKey<T>(key: string, fn: (event: BroadcastEvent<T>) => void) {
-      return on<T>((event) => {
+    onKey(key: string, fn: (event: BroadcastEvent<T>) => void) {
+      return on((event) => {
         if (event.type === 'clear' || event.key === key) {
           fn(event)
         }

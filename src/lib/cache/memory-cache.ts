@@ -2,7 +2,7 @@ import { SvelteMap } from 'svelte/reactivity'
 import type { MemoryCache, CacheEntry } from './types.js'
 
 export function MemoryCache<T>(): MemoryCache<T> {
-  const cache = new SvelteMap<string, CacheEntry>()
+  const cache = new SvelteMap<string, CacheEntry<T>>()
 
   return {
     clear() {
@@ -17,8 +17,8 @@ export function MemoryCache<T>(): MemoryCache<T> {
     set(key, entry) {
       cache.set(key, entry)
     },
-    get<T>(key: string) {
-      return cache.get(key) as CacheEntry<T> | undefined
+    get(key: string) {
+      return cache.get(key)
     },
   }
 }

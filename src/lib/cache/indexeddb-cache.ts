@@ -171,7 +171,7 @@ async function removeOldRecords(db: IDBDatabase) {
       const target = e.target as IDBRequest<IDBCursorWithValue | null>
       const cursor = target.result
       if (cursor) {
-        const entry: CacheEntry | null = cursor.value
+        const entry: CacheEntry<unknown> | null = cursor.value
         if (!(entry?.updated && entry.updated > a_week_ago)) {
           store.delete(cursor.key)
         }

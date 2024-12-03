@@ -1,4 +1,4 @@
-export type CacheEntry<T = unknown> = {
+export type CacheEntry<T> = {
   data: T
   updated: number
 }
@@ -16,7 +16,7 @@ export type MemoryCache<T> = {
   delete(key: string): void
   get(key: string): CacheEntry<T> | undefined
   keys(): string[]
-  set(key: string, entry: CacheEntry): void
+  set(key: string, entry: CacheEntry<T>): void
 }
 
 export type SWRCache<T> = {
