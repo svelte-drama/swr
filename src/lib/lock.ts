@@ -8,20 +8,16 @@ export type LockFn = <T>(
 ) => Promise<T>
 
 export function Lock(model_name: ModelName): LockFn {
-  return function acquireLock<T>(
+  return async function acquireLock<T>(
     key: string,
     exclusive: boolean,
     fn: () => Promise<T>,
   ) {
-    return new Promise<T>((resolve, reject) => {
-      const lock = `${SWR_VERSION}${SEPARATOR}${model_name}${SEPARATOR}${key}`
-      const callback = () => fn().then(resolve, reject)
-
-      navigator.locks.request(
-        lock,
-        { mode: exclusive ? 'exclusive' : 'shared' },
-        callback,
-      )
-    })
+    const lock = `${SWR_VERSION}${SEPARATOR}${model_name}${SEPARATOR}${key}`
+    return navigator.locks.request(
+      lock,
+      { mode: exclusive ? 'exclusive' : 'shared' },
+      fn,
+    )
   }
 }
