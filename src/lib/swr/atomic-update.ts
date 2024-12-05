@@ -15,14 +15,22 @@ export async function atomicUpdate<T>(
   { cache, key, fetcher, lock, request_pool }: AtomicUpdateParams<T>,
   fn: (data: T) => MaybePromise<T>,
 ): Promise<CacheEntry<T>> {
+  // Capture the current call stack for future errors
+  const stack = new Error('SWR: Unable to perform update')
+
   return request_pool.append(key, async () => {
     return lock(key, true, async () => {
-      const initial =
-        cache.memory.get(key)?.data ??
-        (await cache.db.get(key))?.data ??
-        (await fetcher())
-      const data = await fn(initial)
-      return cache.set(key, data)
+      try {
+        const initial =
+          cache.memory.get(key)?.data ??
+          (await cache.db.get(key))?.data ??
+          (await fetcher())
+        const data = await fn(initial)
+        return cache.set(key, data)
+      } catch (e) {
+        stack.cause = e
+        throw stack
+      }
     })
   })
 }

@@ -9,7 +9,6 @@ interface Props {
 let { children, id }: Props = $props()
 
 const pokemon = $derived(suspend(Pokemon.get(id)).value)
-$inspect(pokemon).with(console.trace)
 </script>
 
 {#if pokemon}
