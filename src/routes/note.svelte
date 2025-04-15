@@ -6,8 +6,8 @@ interface Props {
   id: number
 }
 let { id }: Props = $props()
-const pokemon = $derived(suspend(Pokemon.get(id)).value)
-const note = $derived(suspend(Note.get(pokemon?.species.name)).value)
+const pokemon = $derived(suspend(Pokemon.get(id)).current)
+const note = $derived(suspend(Note.get(pokemon?.species.name)).current)
 
 async function onchange(e: { currentTarget: HTMLTextAreaElement }) {
   if (!pokemon) throw new TypeError()

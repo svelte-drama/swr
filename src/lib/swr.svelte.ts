@@ -4,7 +4,6 @@ import { createInternals } from '$lib/swr/internals.js'
 import { refresh } from '$lib/swr/refresh.js'
 import { update as runUpdate } from '$lib/swr/update.js'
 import type { Fetcher, MaybePromise, ModelName, SWRModel } from '$lib/types.js'
-import { readable, toStore } from 'svelte/store'
 
 export function swr<ID, T>(options: {
   fetcher: Fetcher<ID, T>
@@ -63,8 +62,8 @@ export function swr<ID, T>(options: {
       if (params === undefined) {
         const null_promise = new Promise<T>(() => {})
         return {
+          current: undefined,
           error: undefined,
-          value: undefined,
 
           [Symbol.toStringTag]: 'SWRModel',
           catch(reject) {
@@ -76,12 +75,6 @@ export function swr<ID, T>(options: {
           then(resolve, reject) {
             return null_promise.then(resolve, reject)
           },
-
-          get subscribe() {
-            const store = readable(undefined)
-            Object.defineProperty(this, 'subscribe', store.subscribe)
-            return store.subscribe
-          },
         }
       }
 
@@ -91,13 +84,13 @@ export function swr<ID, T>(options: {
 
       let error = $state<Error | undefined>(undefined)
 
-      const value = $derived.by(() => {
+      const current = $derived.by(() => {
         const value = internals.cache.memory.get(key)?.data
         if (value === undefined) getData()
         return value
       })
       const promise = $derived.by(() => {
-        return value === undefined ? getData() : Promise.resolve(value)
+        return current === undefined ? getData() : Promise.resolve(current)
       })
 
       async function getData() {
@@ -112,11 +105,11 @@ export function swr<ID, T>(options: {
       }
 
       return {
+        get current() {
+          return current
+        },
         get error() {
           return error
-        },
-        get value() {
-          return value
         },
 
         [Symbol.toStringTag]: 'SWRModel',
@@ -128,12 +121,6 @@ export function swr<ID, T>(options: {
         },
         get then() {
           return promise.then.bind(promise)
-        },
-
-        get subscribe() {
-          const store = toStore(() => value)
-          Object.defineProperty(this, 'subscribe', store.subscribe)
-          return store.subscribe
         },
       }
     },

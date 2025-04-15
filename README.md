@@ -72,7 +72,7 @@ The returned object `model` has several functions for fetching data.
 
   Delete item from cache.
 
-- `model.get(id: ID) => Promise<MODEL> & Readable<MODEL | undefined> & { error: Error | undefined, value: MODEL | undefined}`
+- `model.get(id: ID) => Promise<MODEL> & { current: MODEL | undefined, error: Error | undefined }`
 
   Returns data from cache if less than `maxAge` or performs a request using the provided `fetcher`
 

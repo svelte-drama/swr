@@ -48,7 +48,6 @@ Pokemon.keys().then((keys) => {
 <script lang="ts">
 import NoteComponent from './note.svelte'
 import PromiseComponent from './promise.svelte'
-import StoreComponent from './store.svelte'
 import ValueComponent from './value.svelte'
 
 interface Props {
@@ -60,10 +59,6 @@ let { id }: Props = $props()
 <PromiseComponent {id}>
   <NoteComponent {id} />
 </PromiseComponent>
-
-<StoreComponent {id}>
-  <NoteComponent {id} />
-</StoreComponent>
 
 <ValueComponent {id}>
   <NoteComponent {id} />
