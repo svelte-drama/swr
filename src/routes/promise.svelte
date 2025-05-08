@@ -8,7 +8,7 @@ interface Props {
 }
 let { children, id }: Props = $props()
 
-const pokemon = $derived(Pokemon.get(id))
+const pokemon = $derived(Pokemon.fetch(id))
 </script>
 
 {#await suspend(pokemon) then pokemon}

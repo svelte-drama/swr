@@ -8,7 +8,7 @@ interface Props {
 }
 let { children, id }: Props = $props()
 
-const pokemon = $derived(suspend(Pokemon.get(id)).current)
+const pokemon = $derived(suspend(Pokemon.get(id)))
 </script>
 
 {#if pokemon}

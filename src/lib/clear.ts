@@ -1,5 +1,5 @@
 import { dispatchClearAll } from '$lib/broadcaster.js'
-import { clearDatabase } from '$lib/cache/indexeddb-cache.js'
+import { clearDatabase } from '$lib/indexed-db.js'
 
 export async function clear() {
   try {

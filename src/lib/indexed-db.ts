@@ -1,15 +1,18 @@
 import { SEPARATOR, SWR_VERSION } from '$lib/constants.js'
-import type { ModelName } from '$lib/types.js'
-import type { CacheEntry, IndexedDBCache } from './types.js'
+import type { ModelName, CacheEntry, IndexedDBCache } from '$lib/types.js'
+import type { Broadcaster } from './broadcaster/types.js'
 
 const DATABASE_NAME = '$$swr'
 const STORE_NAME = 'cache'
 
-export function IndexedDBCache<T>(model_name: ModelName): IndexedDBCache<T> {
+export function createIndexedDBCache<T>(
+  model_name: ModelName,
+  broadcaster: Broadcaster<T>,
+): IndexedDBCache<T> {
   const cache =
     typeof indexedDB === 'undefined'
       ? mockCache
-      : CreateIndexedDBCache(model_name).catch((e) => {
+      : CreateIndexedDBCache(model_name, broadcaster).catch((e) => {
           console.error(e)
           return mockCache
         })
@@ -47,6 +50,7 @@ const mockCache: IndexedDBCache<any> = {
 
 async function CreateIndexedDBCache<T>(
   model_name: ModelName,
+  broadcaster: Broadcaster<T>,
 ): Promise<IndexedDBCache<T>> {
   await openDatabase().then(removeOldRecords)
   const getKey = (key: string) => `${model_name}${SEPARATOR}${key}`
@@ -66,12 +70,14 @@ async function CreateIndexedDBCache<T>(
         const range = getKeyRange()
         return store.delete(range)
       })
+      broadcaster.dispatchClear()
     },
     async delete(key) {
       await makeRequest('readwrite', (store) => {
         const db_key = getKey(key)
         return store.delete(db_key)
       })
+      broadcaster.dispatchDelete(key)
     },
     async get(key) {
       return makeRequest('readonly', (store) => {
@@ -94,6 +100,7 @@ async function CreateIndexedDBCache<T>(
         const db_key = getKey(key)
         return store.put(entry, db_key)
       })
+      broadcaster.dispatch(key, entry)
     },
   }
 }

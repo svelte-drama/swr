@@ -7,6 +7,7 @@ import type {
   Broadcaster,
   BroadcastEvent,
   ClearEvent,
+  ClearErrorEvent,
 } from '$lib/broadcaster/types.js'
 import type { ModelName } from '$lib/types.js'
 import { memoize } from '$lib/util/memoize.js'
@@ -18,12 +19,12 @@ export function Broadcaster<T>(model_name: ModelName): Broadcaster<T> {
 
   function on(fn: (event: BroadcastEvent<T>) => void) {
     return broadcaster.subscribe<BroadcastEvent<T>>((event) => {
-      if (event.type === 'clear') {
-        if (event.model === undefined || event.model === model_name) {
+      if (model_name === event.model) {
+        fn(event)
+      } else if (event.model === undefined) {
+        if (event.type === 'clear' || event.type === 'clear_error') {
           fn(event)
         }
-      } else if (model_name === event.model) {
-        fn(event)
       }
     })
   }
@@ -47,6 +48,14 @@ export function Broadcaster<T>(model_name: ModelName): Broadcaster<T> {
       }
       broadcaster.dispatch(message)
     },
+    dispatchClearErrors() {
+      const message: ClearErrorEvent = {
+        model: model_name,
+        origin: ORIGIN,
+        type: 'clear_error',
+      }
+      broadcaster.dispatch(message)
+    },
     dispatchDelete(key) {
       const message: DeleteEvent = {
         key,
@@ -59,7 +68,11 @@ export function Broadcaster<T>(model_name: ModelName): Broadcaster<T> {
     on,
     onKey(key: string, fn: (event: BroadcastEvent<T>) => void) {
       return on((event) => {
-        if (event.type === 'clear' || event.key === key) {
+        if (
+          event.type === 'clear' ||
+          event.type === 'clear_error' ||
+          event.key === key
+        ) {
           fn(event)
         }
       })
@@ -85,6 +98,15 @@ export function dispatchClearAll() {
   const event: ClearEvent = {
     origin: ORIGIN,
     type: 'clear',
+  }
+  broadcaster.dispatch(event)
+}
+
+export function dispatchClearAllErrors() {
+  const broadcaster = createBroadcaster()
+  const event: ClearErrorEvent = {
+    origin: ORIGIN,
+    type: 'clear_error',
   }
   broadcaster.dispatch(event)
 }

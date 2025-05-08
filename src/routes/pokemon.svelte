@@ -56,10 +56,10 @@ interface Props {
 let { id }: Props = $props()
 </script>
 
-<PromiseComponent {id}>
-  <NoteComponent {id} />
-</PromiseComponent>
-
 <ValueComponent {id}>
   <NoteComponent {id} />
 </ValueComponent>
+
+<PromiseComponent {id}>
+  <NoteComponent {id} />
+</PromiseComponent>

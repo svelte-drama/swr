@@ -1,6 +1,6 @@
 {
   "name": "@svelte-drama/swr",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "scripts": {
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "dev": "vite dev --open",
@@ -10,9 +10,9 @@
     "prepublishOnly": "npm run package"
   },
   "devDependencies": {
-    "@svelte-drama/suspense": "^1.0.1",
+    "@svelte-drama/suspense": "^2.0.0",
     "@sveltejs/adapter-auto": "^6.0.0",
-    "@sveltejs/kit": "^2.20.7",
+    "@sveltejs/kit": "^2.20.8",
     "@sveltejs/package": "^2.3.11",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "cross-spawn": "^7.0.6",
@@ -20,11 +20,11 @@
     "prettier": "^3.5.3",
     "prettier-plugin-svelte": "^3.3.3",
     "publint": "^0.3.12",
-    "svelte": "^5.27.0",
-    "svelte-check": "^4.1.6",
+    "svelte": "^5.28.2",
+    "svelte-check": "^4.1.7",
     "tslib": "^2.8.1",
     "typescript": "^5.8.3",
-    "vite": "^6.2.6"
+    "vite": "^6.3.5"
   },
   "exports": {
     ".": {
@@ -42,7 +42,7 @@
   "license": "0BSD",
   "packageManager": "pnpm@10.2.0",
   "peerDependencies": {
-    "svelte": "^5.0.0"
+    "svelte": "^5.3.0"
   },
   "repository": "github:svelte-drama/swr",
   "svelte": "./dist/index.js",

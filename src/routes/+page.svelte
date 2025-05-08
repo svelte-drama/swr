@@ -16,7 +16,8 @@ let id = $state(133)
   {#snippet loading()}
     <p in:fade>Loading Pokemon...</p>
   {/snippet}
-  {#snippet error()}
+
+  {#snippet failed()}
     <p>An error has occurred.</p>
   {/snippet}
 

@@ -48,7 +48,7 @@ const model = swr<ID, MODEL>({
 
   A function to create a unique cache when given the user defined `id`. Typically, this is the API path this data would be fetched from.
 
-- `fetcher(key: string, id: ID) => MaybePromise<MODEL>`
+- `fetcher(key: string, id: ID) => MODEL | Promise<MODEL>`
 
   A function to retrieve data from the server. It is passed `key`, the result of the `key` function and the same `id` passed to the `key` function.
 
@@ -66,15 +66,23 @@ The returned object `model` has several functions for fetching data.
 
 - `model.clear() => Promise<void>`
 
-  Clear all data from this cache. Note: Models with the same name share a cache.
+  Clear all data from this cache.
+
+- `model.clearErrors() => Promise<void>`
+
+  Clear all errors from this cache.
 
 - `model.delete(id: ID) => Promise<void>`
 
   Delete item from cache.
 
-- `model.get(id: ID) => Promise<MODEL> & { current: MODEL | undefined, error: Error | undefined }`
+- `model.fetch(id: ID) => Promise<MODEL>`
 
   Returns data from cache if less than `maxAge` or performs a request using the provided `fetcher`
+
+- `model.get(id: ID | undefined) => MODEL | undefined`
+
+  Returns data from cache if less than `maxAge` or performs a request using the provided `fetcher`. Use inside of `$effect` or `$derived` in order to update as the underlying data changes.
 
 - `model.keys() => Promise<string[]>`
 
@@ -85,7 +93,7 @@ The returned object `model` has several functions for fetching data.
   Performs a request using the provided `fetcher`. Always makes a request, regradless of current cache status.
 
 - `model.update(id: ID, data: MODEL) => Promise<MODEL>`  
-  `model.update(id: ID, fn: (data: MODEL) => MaybePromise<MODEL>) => Promise<MODEL>`
+  `model.update(id: ID, fn: (data: MODEL) => MODEL | Promise<MODEL>) => Promise<MODEL>`
 
   Update data in the cache.
 
@@ -98,3 +106,13 @@ clear()
 ```
 
 Remove all data from all caches.
+
+### clearErrors
+
+```ts
+import { clearErrors } from '@svelte-drama/swr'
+
+clearErrors()
+```
+
+Remove all errors from all caches.
