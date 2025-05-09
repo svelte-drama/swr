@@ -2,10 +2,15 @@ import { SvelteMap } from 'svelte/reactivity'
 import type { IndexedDBCache } from '$lib/types.js'
 
 type Cache<T> = {
-  data: Map<string, T>
+  data: Map<
+    string,
+    {
+      data: T
+      updated: number
+    }
+  >
   error: Map<string, Error>
   request: Map<string, Promise<T>>
-  updated: Map<string, number>
 }
 
 class CacheEntry<T> {
@@ -24,7 +29,7 @@ class CacheEntry<T> {
   }
 
   get data() {
-    return this.#cache.data.get(this.#key)
+    return this.#cache.data.get(this.#key)?.data
   }
   set data(value) {
     if (value === undefined) {
@@ -34,11 +39,13 @@ class CacheEntry<T> {
 
     const previous = this.#cache.data.get(this.#key)
     // If data has not changed, reuse old object to reduce rerenders
-    if (!isEquivalent(previous, value)) {
-      this.#cache.data.set(this.#key, value)
+    const entry = {
+      data:
+        previous && isEquivalent(previous.data, value) ? previous.data : value,
+      updated: Date.now(),
     }
+    this.#cache.data.set(this.#key, entry)
     this.error = undefined
-    this.updated = Date.now()
   }
   get error() {
     return this.#cache.error.get(this.#key)
@@ -87,10 +94,13 @@ class CacheEntry<T> {
     this.#cache.request.set(this.#key, request)
   }
   get updated() {
-    return this.#cache.updated.get(this.#key) ?? 0
+    return this.#cache.data.get(this.#key)?.updated ?? 0
   }
   set updated(value) {
-    this.#cache.updated.set(this.#key, value)
+    const data = this.#cache.data.get(this.#key)
+    if (data) {
+      data.updated = value
+    }
   }
 
   toJSON() {
@@ -102,11 +112,10 @@ class CacheEntry<T> {
 }
 
 export function createCache<T>(options: { db: IndexedDBCache<T> }) {
-  const cache = {
-    data: new SvelteMap<string, T>(),
-    error: new SvelteMap<string, Error>(),
-    request: new Map<string, Promise<T>>(),
-    updated: new Map<string, number>(),
+  const cache: Cache<T> = {
+    data: new SvelteMap(),
+    error: new SvelteMap(),
+    request: new Map(),
   }
 
   return {
@@ -114,7 +123,6 @@ export function createCache<T>(options: { db: IndexedDBCache<T> }) {
       cache.data.clear()
       cache.error.clear()
       cache.request.clear()
-      cache.updated.clear()
     },
     clearErrors() {
       cache.error.clear()
@@ -123,7 +131,6 @@ export function createCache<T>(options: { db: IndexedDBCache<T> }) {
       cache.data.delete(key)
       cache.error.delete(key)
       cache.request.delete(key)
-      cache.updated.delete(key)
     },
     get(key: string) {
       return new CacheEntry({
@@ -137,7 +144,6 @@ export function createCache<T>(options: { db: IndexedDBCache<T> }) {
         ...cache.data.keys(),
         ...cache.error.keys(),
         ...cache.request.keys(),
-        ...cache.updated.keys(),
       )
       return [...keys]
     },
