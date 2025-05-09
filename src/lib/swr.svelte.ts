@@ -108,6 +108,7 @@ export function swr<ID, T>(options: {
     data: T | ((data: T) => MaybePromise<T>),
   ): Promise<T> {
     const key = options.key(params)
+    const stack = new Error('SWR: Unable to perform update')
 
     return lock(key, async () => {
       const entry = cache.get(key)
@@ -116,7 +117,14 @@ export function swr<ID, T>(options: {
           entry.data ??
           (await db.get(key))?.data ??
           (await fetchFromServer(key, params))
-        entry.request = Promise.resolve(data(initial))
+        entry.request = (async () => {
+          try {
+            return data(initial)
+          } catch (e) {
+            stack.cause = e
+            throw stack
+          }
+        })()
         return entry.request
       } else {
         entry.data = data
