@@ -39,9 +39,11 @@ class CacheEntry<T> {
 
     const previous = this.#cache.data.get(this.#key)
     // If data has not changed, reuse old object to reduce rerenders
+    const data = $state(
+      previous && isEquivalent(previous.data, value) ? previous.data : value,
+    )
     const entry = {
-      data:
-        previous && isEquivalent(previous.data, value) ? previous.data : value,
+      data,
       updated: Date.now(),
     }
     this.#cache.data.set(this.#key, entry)
