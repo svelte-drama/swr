@@ -4,7 +4,7 @@ import type { Broadcaster } from './broadcaster/types.js'
 
 const DATABASE_NAME = '$$swr'
 const STORE_NAME = 'cache'
-const TIMEOUT = 5000
+const SECOND = 1000
 
 export function createIndexedDBCache<T>(
   model_name: ModelName,
@@ -87,7 +87,7 @@ async function CreateIndexedDBCache<T>(
         return store.get(db_key)
       })
       const time_out = new Promise((resolve) => {
-        setTimeout(() => resolve(undefined), TIMEOUT)
+        setTimeout(() => resolve(undefined), 1 * SECOND)
       })
       return Promise.race([request, time_out])
     },
@@ -169,7 +169,7 @@ const openDatabase = () => {
     }
     setTimeout(() => {
       reject('IDBConnection timeout')
-    }, TIMEOUT)
+    }, 5 * SECOND)
   })
 }
 
