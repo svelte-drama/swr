@@ -4,6 +4,7 @@ import type { Broadcaster } from './broadcaster/types.js'
 
 const DATABASE_NAME = '$$swr'
 const STORE_NAME = 'cache'
+const TIMEOUT = 5000
 
 export function createIndexedDBCache<T>(
   model_name: ModelName,
@@ -52,7 +53,8 @@ async function CreateIndexedDBCache<T>(
   model_name: ModelName,
   broadcaster: Broadcaster<T>,
 ): Promise<IndexedDBCache<T>> {
-  await openDatabase().then(removeOldRecords)
+  const db = await openDatabase()
+  await removeOldRecords(db)
   const getKey = (key: string) => `${model_name}${SEPARATOR}${key}`
 
   function getKeyRange() {
@@ -66,27 +68,31 @@ async function CreateIndexedDBCache<T>(
 
   return {
     async clear() {
-      await makeRequest('readwrite', (store) => {
+      await makeRequest(db, 'readwrite', (store) => {
         const range = getKeyRange()
         return store.delete(range)
       })
       broadcaster.dispatchClear()
     },
     async delete(key) {
-      await makeRequest('readwrite', (store) => {
+      await makeRequest(db, 'readwrite', (store) => {
         const db_key = getKey(key)
         return store.delete(db_key)
       })
       broadcaster.dispatchDelete(key)
     },
     async get(key) {
-      return makeRequest('readonly', (store) => {
+      const request = makeRequest(db, 'readonly', (store) => {
         const db_key = getKey(key)
         return store.get(db_key)
       })
+      const time_out = new Promise((resolve) => {
+        setTimeout(() => resolve(undefined), TIMEOUT)
+      })
+      return Promise.race([request, time_out])
     },
     async keys() {
-      const keys = await makeRequest('readonly', (store) => {
+      const keys = await makeRequest(db, 'readonly', (store) => {
         const range = getKeyRange()
         return store.getAllKeys(range)
       })
@@ -96,7 +102,7 @@ async function CreateIndexedDBCache<T>(
       })
     },
     async set(key, entry) {
-      await makeRequest('readwrite', (store) => {
+      await makeRequest(db, 'readwrite', (store) => {
         const db_key = getKey(key)
         return store.put(entry, db_key)
       })
@@ -106,21 +112,24 @@ async function CreateIndexedDBCache<T>(
 }
 
 export async function clearDatabase() {
-  return makeRequest('readwrite', (store) => {
+  const db = await openDatabase()
+  return makeRequest(db, 'readwrite', (store) => {
     return store.clear()
   })
 }
 
 async function makeRequest<T>(
+  db: IDBDatabase,
   access: 'readonly' | 'readwrite',
   fn: (store: IDBObjectStore) => IDBRequest<T>,
 ) {
-  const db = await openDatabase()
-  const transaction = db.transaction(STORE_NAME, access, {
-    durability: 'relaxed',
-  })
-  const store = transaction.objectStore(STORE_NAME)
   return new Promise<T>((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, access, {
+      durability: 'relaxed',
+    })
+    rejectOnError(transaction, reject)
+
+    const store = transaction.objectStore(STORE_NAME)
     const request = fn(store)
     rejectOnError(request, reject)
     request.onsuccess = (e) => {
@@ -144,6 +153,9 @@ const openDatabase = () => {
   return new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, SWR_VERSION)
     rejectOnError(request, reject)
+    request.onblocked = () => {
+      reject('IDBConnection blocked')
+    }
     request.onsuccess = (e: Event) => {
       const target = e.target as IDBRequest<IDBDatabase>
       resolve(target.result)
@@ -155,10 +167,16 @@ const openDatabase = () => {
         db.createObjectStore(STORE_NAME)
       }
     }
+    setTimeout(() => {
+      reject('IDBConnection timeout')
+    }, TIMEOUT)
   })
 }
 
-function rejectOnError(request: IDBRequest, reject: (reason?: any) => void) {
+function rejectOnError(
+  request: IDBRequest | IDBTransaction,
+  reject: (reason?: any) => void,
+) {
   request.onerror = (e: Event) => {
     const target = e.target as IDBRequest<IDBDatabase>
     reject(target.error)
